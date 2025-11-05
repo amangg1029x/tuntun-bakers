@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, ShoppingCart, Phone, User } from 'lucide-react';
+import Logo from "../assets/Logo.jpeg";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -35,7 +36,7 @@ const Header = () => {
           <div className="flex items-center space-x-3 group cursor-pointer">
             <div className="relative">
               <div className="w-12 h-12 bg-gradient-to-br from-amber-600 to-amber-800 rounded-full flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                <span className="text-white font-bold text-xl">TB</span>
+                <img className="rounded-3xl" src={Logo} />
               </div>
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full animate-pulse"></div>
             </div>
