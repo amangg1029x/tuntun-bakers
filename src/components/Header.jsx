@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, X, ShoppingCart, Phone, User } from 'lucide-react';
 import Logo from "../assets/Logo.jpeg";
 
-const Header = () => {
+const Header = () => {  
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
