@@ -90,7 +90,7 @@ const ProductsPage = () => {
           </div>
 
           {/* Category Tabs */}
-          <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="hidden md:flex gap-2 mt-4 overflow-x-auto pb-2 pl-2 pt-2 scrollbar-hide">
             {productsData.categories.map((category, idx) => (
               <button
                 key={idx}
@@ -137,12 +137,14 @@ const ProductsPage = () => {
       </div>
 
       {/* Floating Menu */}
-      <FloatingMenu
-        categories={productsData.categories}
-        selectedCategory={selectedCategory}
-        onCategorySelect={setSelectedCategory}
-        cartCount={totalCartItems}
-      />
+      <div className='lg:hidden'>
+        <FloatingMenu
+          categories={productsData.categories}
+          selectedCategory={selectedCategory}
+          onCategorySelect={setSelectedCategory}
+          cartCount={totalCartItems}
+        />
+      </div>
 
       <style jsx>{`
         @keyframes fadeInUp {

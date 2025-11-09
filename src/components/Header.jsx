@@ -53,7 +53,7 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
+          <nav className="hidden lg:flex items-center space-x-1">
             {navItems.map((item, index) => (
               <a
                 key={index}
@@ -91,7 +91,7 @@ const Header = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-amber-900 hover:bg-amber-100 rounded-lg transition-colors"
+            className="lg:hidden p-2 text-amber-900 hover:bg-amber-100 rounded-lg transition-colors"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -99,7 +99,7 @@ const Header = () => {
 
         {/* Mobile Menu */}
         <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ${
+          className={`lg:hidden overflow-hidden transition-all duration-300 ${
             isMobileMenuOpen ? 'max-h-110 opacity-100 mt-4 bg-white rounded-2xl p-3' : 'max-h-0 opacity-0'
           }`}
         >

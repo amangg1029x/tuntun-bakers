@@ -64,7 +64,7 @@ const Testimonials = () => {
         </div>
 
         {/* Testimonials Slider */}
-        <div className="max-w-5xl mx-auto relative">
+        <div className="xl:max-w-5xl lg:max-w-4xl max-w-2xl mx-auto relative">
           {/* Main Testimonial Card */}
           <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-3xl p-12 shadow-2xl relative overflow-hidden">
             {/* Quote Icon */}

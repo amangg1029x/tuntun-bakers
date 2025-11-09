@@ -9,6 +9,8 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import OrdersPage from './pages/OrdersPage';
 import CartPage from './pages/CartPage';
+import CheckoutPage from './pages/CheckoutPage';
+import OrderSuccessPage from './pages/OrderSuccessPage';
 import { AppProvider } from './context/AppContext';
 
 function App() {
@@ -28,6 +30,8 @@ function App() {
                 <Route path = "/contact" element = {<Contact />} />
                 <Route path = "/orders" element = {<OrdersPage />} />
                 <Route path = "/cart" element = {<CartPage />} />
+                <Route path = "/checkout" element = {<CheckoutPage />} />
+                <Route path  = "/order-success" element = {<OrderSuccessPage />} />
               </Routes>
               <Footer />
             </>

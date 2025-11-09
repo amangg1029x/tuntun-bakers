@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useCart } from '../context/AppContext';
 import { ShoppingCart, Plus, Minus, Trash2, ArrowRight, ShoppingBag, Sparkles, Truck, Package, Clock, Gift, Tag, X } from 'lucide-react';
 import EmptyCart from '../components/EmptyCart';
@@ -137,7 +138,9 @@ const CartPage = () => {
               <p className="text-2xl font-bold text-amber-950">₹{total}</p>
             </div>
             <button className="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg active:scale-95 transition-all duration-300 flex items-center gap-2">
-              <span>Checkout</span>
+              <Link to = "/checkout">
+                <span>Checkout</span>
+              </Link>
               <ArrowRight className="w-5 h-5" />
             </button>
           </div>

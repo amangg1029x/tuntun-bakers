@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/AppContext';
 import { ShoppingCart, Plus, Minus, Trash2, ArrowRight, ShoppingBag, Sparkles, Truck, Package, Clock, Gift, Tag, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const OrderSummary = ({ subtotal, deliveryCharge, total, itemCount }) => {
   const isFreeDelivery = subtotal >= 499;
@@ -92,7 +93,9 @@ const OrderSummary = ({ subtotal, deliveryCharge, total, itemCount }) => {
       {/* Checkout Button */}
       <div className="p-6 bg-gradient-to-r from-amber-50 to-orange-50 border-t border-amber-200">
         <button className="w-full bg-gradient-to-r from-amber-600 to-amber-700 text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 group">
-          <span>Proceed to Checkout</span>
+          <Link to = "/checkout">
+            <span>Proceed to Checkout</span>
+          </Link>
           <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
         </button>
         <p className="text-center text-sm text-amber-700 mt-3">
