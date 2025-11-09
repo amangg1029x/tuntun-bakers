@@ -3,35 +3,16 @@ import { ShoppingCart, Heart, Star, Search, SlidersHorizontal, X, ChevronDown, P
 import productsData from '../data/productData.json';
 import ProductCard from "../components/ProductCard";
 import FloatingMenu from '../components/FloatingMenu';
+import { useCart, useFavorites } from '../context/AppContext';
 
 const ProductsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
-  const [favorites, setFavorites] = useState([]);
-  const [cart, setCart] = useState([]);
+  const { cart, addToCart } = useCart();
+  const { favorites, toggleFavorite } = useFavorites();
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 1000]);
-
-  const toggleFavorite = (id) => {
-    setFavorites(prev =>
-      prev.includes(id) ? prev.filter(fav => fav !== id) : [...prev, id]
-    );
-  };
-
-  const addToCart = (product, quantity) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      if (existing) {
-        return prev.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      }
-      return [...prev, { ...product, quantity }];
-    });
-  };
 
   // Filter and sort products
   let filteredProducts = productsData.products.filter(product => {

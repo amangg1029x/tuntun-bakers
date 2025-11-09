@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, ShoppingCart, Phone, User } from 'lucide-react';
 import Logo from "../assets/Logo.jpeg";
+import { useCart } from '../context/AppContext';
 
 const Header = () => {  
+  const { getCartCount } = useCart();
+  const cartCount = getCartCount();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -20,7 +23,7 @@ const Header = () => {
     { name: 'Products', href: 'products' },
     { name: 'About', href: 'about' },
     { name: 'Contact', href: 'contact' },
-    { name: 'Orders', href: '#orders' }
+    { name: 'Orders', href: 'orders' }
   ];
 
   return (
@@ -73,13 +76,16 @@ const Header = () => {
               <Phone className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></span>
             </button>
-            <button className="flex items-center space-x-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white px-5 py-2.5 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300">
+            <Link 
+              to="/cart"
+              className="flex items-center space-x-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white px-5 py-2.5 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300"
+            >
               <ShoppingCart className="w-5 h-5" />
               <span className="font-medium">Cart</span>
               <span className="bg-white text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">
-                0
+                {cartCount}
               </span>
-            </button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -94,7 +100,7 @@ const Header = () => {
         {/* Mobile Menu */}
         <div
           className={`md:hidden overflow-hidden transition-all duration-300 ${
-            isMobileMenuOpen ? 'max-h-110 opacity-100 mt-4' : 'max-h-0 opacity-0'
+            isMobileMenuOpen ? 'max-h-110 opacity-100 mt-4 bg-white rounded-2xl p-3' : 'max-h-0 opacity-0'
           }`}
         >
           <nav className="flex flex-col space-y-2 pb-4">
@@ -108,10 +114,13 @@ const Header = () => {
                 {item.name}
               </a>
             ))}
-            <button className="flex items-center justify-center space-x-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white px-5 py-3 rounded-lg mt-2">
+            <Link 
+              to="/cart"
+              className="flex items-center justify-center space-x-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white px-5 py-3 rounded-lg"
+            >
               <ShoppingCart className="w-5 h-5" />
-              <span className="font-medium">Cart (0)</span>
-            </button>
+              <span className="font-medium">Cart ({cartCount})</span>
+            </Link>
             <Link to="/login" className="flex items-center justify-center space-x-2 bg-white text-amber-900 px-5 py-3 rounded-lg border-2 border-amber-300">
               <User className="w-5 h-5" />
               <span className="font-medium">Login</span>

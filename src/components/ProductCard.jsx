@@ -75,7 +75,7 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
           </div>
         </div>
 
-        <p className="text-amber-700 text-sm mb-3 line-clamp-2">{product.description}</p>
+        <p className="text-amber-700 text-sm mb-3 line-clamp-2 h-10">{product.description}</p>
         
         <div className="text-xs text-amber-600 mb-4">⭐ {product.reviews} reviews</div>
 

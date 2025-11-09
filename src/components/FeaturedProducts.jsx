@@ -1,53 +1,41 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Heart, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import ProductCard from './ProductCard';
+import productData from '../data/productData.json';
+import { useCart, useFavorites } from '../context/AppContext';
 
 const FeaturedProducts = () => {
-  const [favorites, setFavorites] = useState([]);
 
-  const products = [
-    {
-      id: 1,
-      name: 'Sourdough Bread',
-      price: 120,
-      emoji: '🍞',
-      rating: 4.8,
-      description: 'Artisan sourdough with crispy crust',
-      tag: 'Best Seller'
-    },
-    {
-      id: 2,
-      name: 'Chocolate Croissant',
-      price: 80,
-      emoji: '🥐',
-      rating: 4.9,
-      description: 'Buttery layers with dark chocolate',
-      tag: 'Popular'
-    },
-    {
-      id: 3,
-      name: 'Red Velvet Cake',
-      price: 450,
-      emoji: '🎂',
-      rating: 5.0,
-      description: 'Rich & creamy celebration cake',
-      tag: 'Premium'
-    },
-    {
-      id: 4,
-      name: 'Blueberry Muffin',
-      price: 60,
-      emoji: '🧁',
-      rating: 4.7,
-      description: 'Fresh blueberries in every bite',
-      tag: 'New'
-    }
-  ];
+  const { addToCart } = useCart();
+  const { favorites, toggleFavorite } = useFavorites();
 
-  const toggleFavorite = (id) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((fav) => fav !== id) : [...prev, id]
-    );
-  };
+
+  // Auto-select featured products
+const getFeaturedProducts = () => {
+  const allProducts = productData.products;
+  
+  // Best Seller: Trending products, sorted by reviews
+  const bestSeller = allProducts
+    .filter(p => p.isTrending)
+    .sort((a, b) => b.reviews - a.reviews)[0];
+  
+  // Popular: Highest rating
+  const popular = allProducts
+    .sort((a, b) => b.rating - a.rating)[0];
+  
+  // Premium: Highest price OR has "Premium" tag
+  const premium = allProducts
+    .filter(p => p.tags.includes("Premium") || p.price >= 400)
+    .sort((a, b) => b.price - a.price)[0];
+  
+  // New: isNew = true, or most recent
+  const newProduct = allProducts
+    .filter(p => p.isNew)[0] || allProducts[allProducts.length - 1];
+  
+  return [bestSeller, popular, premium, newProduct].filter(Boolean);
+};
+
+const products = getFeaturedProducts();
 
   return (
     <section id="products" className="py-20 bg-white">
@@ -69,79 +57,22 @@ const FeaturedProducts = () => {
         {/* Products Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {products.map((product, index) => (
-            <div
+            <ProductCard
               key={product.id}
-              className="group bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Product Tag */}
-              <div className="relative">
-                <div className="absolute top-4 left-4 z-10">
-                  <span className="bg-gradient-to-r from-amber-600 to-orange-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                    {product.tag}
-                  </span>
-                </div>
-
-                {/* Favorite Button */}
-                <button
-                  onClick={() => toggleFavorite(product.id)}
-                  className="absolute top-4 right-4 z-10 bg-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-300"
-                >
-                  <Heart
-                    className={`w-5 h-5 ${
-                      favorites.includes(product.id)
-                        ? 'fill-red-500 text-red-500'
-                        : 'text-amber-600'
-                    }`}
-                  />
-                </button>
-
-                {/* Product Image Placeholder */}
-                <div className="bg-gradient-to-br from-amber-100 to-orange-100 aspect-square flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                  <span className="text-9xl group-hover:scale-110 transition-transform duration-300">
-                    {product.emoji}
-                  </span>
-                </div>
-              </div>
-
-              {/* Product Info */}
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xl font-bold text-amber-950 group-hover:text-amber-700 transition-colors">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center space-x-1 bg-amber-100 px-2 py-1 rounded-full">
-                    <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                    <span className="text-sm font-bold text-amber-900">
-                      {product.rating}
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-amber-700 text-sm mb-4">{product.description}</p>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-2xl font-bold text-amber-900">
-                      ₹{product.price}
-                    </span>
-                  </div>
-                  <button className="bg-gradient-to-r from-amber-600 to-amber-700 text-white p-3 rounded-xl hover:shadow-lg hover:scale-110 transition-all duration-300 group/btn">
-                    <ShoppingCart className="w-5 h-5 group-hover/btn:animate-bounce" />
-                  </button>
-                </div>
-              </div>
-            </div>
+              product={product}
+              onAddToCart={(prod, qty) => console.log('Added to cart:', prod, qty)}
+              onToggleFavorite={toggleFavorite}
+            />
           ))}
         </div>
 
         {/* View All Button */}
         <div className="text-center mt-12">
-          <a href="products">  
+          <Link to="/products">  
           <button className="bg-white text-amber-900 px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border-2 border-amber-300 hover:border-amber-500">
             View All Products →
           </button>
-          </a>
+          </Link>
         </div>
       </div>
     </section>

@@ -9,12 +9,10 @@ import Footer from '../components/Footer';
 const Home = () => {
   return (
     <div className="min-h-screen bg-white">
-      <Header />
       <Hero />
       <FeaturedProducts />
       <WhyChooseUs />
       <Testimonials />
-      <Footer />
     </div>
   );
 };
