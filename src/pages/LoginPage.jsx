@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User, Phone, MapPin, ArrowRight, Sparkles, ShoppingBag, Heart, Award } from 'lucide-react';
+import { useUser } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
+  const { login } = useUser();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -13,10 +17,12 @@ const LoginPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
+    
     setTimeout(() => {
       setIsLoading(false);
-      console.log('Login:', formData);
+      // Call login with mock data (replace with API call later)
+      login();
+      navigate('/profile');
     }, 2000);
   };
 

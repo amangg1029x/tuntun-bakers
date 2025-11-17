@@ -11,7 +11,7 @@ const FeaturedProducts = () => {
 
 
   // Auto-select featured products
-const getFeaturedProducts = () => {
+  const getFeaturedProducts = () => {
   const allProducts = productData.products;
   
   // Best Seller: Trending products, sorted by reviews
@@ -60,7 +60,7 @@ const products = getFeaturedProducts();
             <ProductCard
               key={product.id}
               product={product}
-              onAddToCart={(prod, qty) => console.log('Added to cart:', prod, qty)}
+              onAddToCart={addToCart}
               onToggleFavorite={toggleFavorite}
             />
           ))}

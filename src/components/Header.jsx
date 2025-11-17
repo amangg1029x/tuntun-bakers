@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, ShoppingCart, Phone, User } from 'lucide-react';
 import Logo from "../assets/Logo.jpeg";
-import { useCart } from '../context/AppContext';
+import { useCart , useUser } from '../context/AppContext';
 
 const Header = () => {  
+  const { isAuthenticated, user } = useUser();
   const { getCartCount } = useCart();
   const cartCount = getCartCount();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -68,10 +69,23 @@ const Header = () => {
 
           {/* Action Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            <Link to="/login" className="flex items-center space-x-2 bg-white text-amber-900 px-5 py-2.5 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300 border-2 border-amber-300">
-              <User className="w-5 h-5" />
-              <span className="font-medium">Login</span>
-            </Link>
+            {isAuthenticated ? (
+              <Link 
+                to="/profile"
+                className="flex items-center space-x-2 bg-white text-amber-900 px-5 py-2.5 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300 border-2 border-amber-300"
+              >
+                <User className="w-5 h-5" />
+                <span className="font-medium">Profile</span>
+              </Link>
+            ) : (
+              <Link 
+                to="/login"
+                className="flex items-center space-x-2 bg-white text-amber-900 px-5 py-2.5 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300 border-2 border-amber-300"
+              >
+                <User className="w-5 h-5" />
+                <span className="font-medium">Login</span>
+              </Link>
+            )}
             <button className="p-2 text-amber-900 hover:bg-amber-100 rounded-lg transition-all duration-300 relative group">
               <Phone className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></span>
@@ -121,10 +135,24 @@ const Header = () => {
               <ShoppingCart className="w-5 h-5" />
               <span className="font-medium">Cart ({cartCount})</span>
             </Link>
-            <Link to="/login" className="flex items-center justify-center space-x-2 bg-white text-amber-900 px-5 py-3 rounded-lg border-2 border-amber-300">
-              <User className="w-5 h-5" />
-              <span className="font-medium">Login</span>
-            </Link>
+            {isAuthenticated ? (
+              <Link 
+                to="/profile"
+                className="flex items-center justify-center space-x-2 bg-white text-amber-900 px-5 py-3 rounded-lg border-2 border-amber-300"
+              >
+                <User className="w-5 h-5" />
+                <span className="font-medium">Profile</span>
+              </Link>
+            ) : (
+              <Link 
+                to="/login"
+                className="flex items-center justify-center space-x-2 bg-white text-amber-900 px-5 py-3 rounded-lg border-2 border-amber-300"
+              >
+                <User className="w-5 h-5" />
+                <span className="font-medium">Login</span>
+              </Link>
+            )}
+
           </nav>
         </div>
       </div>

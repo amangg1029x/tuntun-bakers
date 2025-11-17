@@ -12,6 +12,7 @@ import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
 import { AppProvider } from './context/AppContext';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
                 <Route path = "/cart" element = {<CartPage />} />
                 <Route path = "/checkout" element = {<CheckoutPage />} />
                 <Route path  = "/order-success" element = {<OrderSuccessPage />} />
+                <Route path = "/profile" element = {<ProfilePage />} />
               </Routes>
               <Footer />
             </>

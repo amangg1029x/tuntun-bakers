@@ -128,7 +128,7 @@ const CheckoutPage = () => {
                   </button>
                 </div>
 
-                <div className="grid gap-4">
+                <div className="grid md:ml-4 md:mr-4 gap-4">
                   {addresses.map((address) => (
                     <AddressCard
                       key={address.id}
