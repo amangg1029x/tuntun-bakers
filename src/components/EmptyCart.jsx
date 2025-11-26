@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/AppContext';
 import { ShoppingCart, Plus, Minus, Trash2, ArrowRight, ShoppingBag, Sparkles, Truck, Package, Clock, Gift, Tag, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const EmptyCart = () => {
   return (
@@ -14,8 +15,8 @@ const EmptyCart = () => {
       <p className="text-lg text-amber-700 mb-8 max-w-md mx-auto">
         Looks like you haven't added any delicious treats yet. Let's fix that!
       </p>
-      <a
-        href="/products"
+      
+      <a  href="/products"
         className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 group"
       >
         <ShoppingBag className="w-6 h-6" />

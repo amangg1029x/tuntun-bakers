@@ -8,11 +8,12 @@ import AddAddressModal from '../components/AddAddressModal';
 import PaymentMethod from '../components/PaymentMethod';
 import mockSavedAddresses from "../data/mockSavedAddresses.json"
 import OrderSummarySidebar from '../components/OrderSummarySidebar';
+import { orderAPI } from '../services/api';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { cart, getCartTotal, getCartCount, clearCart } = useCart();
-  
+
   const [currentStep, setCurrentStep] = useState(1);
   const [addresses, setAddresses] = useState(mockSavedAddresses);
   const [selectedAddress, setSelectedAddress] = useState(mockSavedAddresses[0]);
@@ -42,7 +43,10 @@ const CheckoutPage = () => {
 
   const subtotal = getCartTotal();
   const deliveryCharge = subtotal >= 499 ? 0 : 40;
-  const total = subtotal + deliveryCharge;
+  const freeDeliveryThreshold = 499;
+  const actualDeliveryCharge = subtotal >= freeDeliveryThreshold ? 0 : deliveryCharge;
+  const total = subtotal + actualDeliveryCharge;
+  const itemCount = getCartCount();
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -64,25 +68,40 @@ const CheckoutPage = () => {
     setAddresses(prev => prev.filter(addr => addr.id !== id));
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     setIsProcessing(true);
     
-    // Simulate order placement
-    setTimeout(() => {
+    try {
       const orderData = {
-        orderId: `TB-${Date.now()}`,
-        address: selectedAddress,
-        payment: selectedPayment,
-        items: cart,
-        total,
-        savePayment: savePaymentMethod,
-        sendUpdates
+        items: cart.map(item => ({
+          product: item.product._id || item.product.id,
+          quantity: item.quantity
+        })),
+        deliveryAddress: selectedAddress,
+        paymentMethod: selectedPayment.id,
+        subtotal,
+        deliveryCharge: actualDeliveryCharge,
+        totalAmount: total,
+        notes: '' // You can add notes field if needed
       };
       
-      console.log('Order placed:', orderData);
-      clearCart();
-      navigate('/order-success', { state: { order: orderData }, replace: true });
-    }, 2000);
+      const response = await orderAPI.create(orderData);
+      
+      // Navigate to success page with order data
+      navigate('/order-success', { 
+        state: { 
+          order: {
+            orderId: response.data.data.orderNumber,
+            ...response.data.data
+          }
+        } 
+      });
+    } catch (error) {
+      console.error('Order creation failed:', error);
+      alert('Failed to place order. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const canProceed = () => {
@@ -329,7 +348,7 @@ const CheckoutPage = () => {
         editAddress={editingAddress}
       />
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }

@@ -4,6 +4,30 @@ import { ShoppingCart, Heart, Star, Search, SlidersHorizontal, X, ChevronDown, P
 const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddToCart = async () => {
+    setIsAdding(true);
+    try {
+      console.log('Product:', product); // Debug log
+      await onAddToCart(product, quantity);
+      setQuantity(1);
+    } catch (error) {
+      console.error('Add to cart error:', error);
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to add to cart';
+      alert(`❌ ${errorMsg}`);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    try {
+      await onToggleFavorite(product._id);
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+    }
+  };
 
   return (
     <div
@@ -15,21 +39,20 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
       <div className="absolute top-3 left-3 z-20 flex flex-col gap-2">
         {product.isNew && (
           <span className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-            <Sparkles className="w-3 h-3" />
+            <Star className="w-3 h-3" />
             New
           </span>
         )}
         {product.isTrending && (
           <span className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            Trending
+            🔥 Trending
           </span>
         )}
       </div>
 
       {/* Favorite Button */}
       <button
-        onClick={() => onToggleFavorite(product.id)}
+        onClick={handleToggleFavorite}
         className="absolute top-3 right-3 z-20 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-300"
       >
         <Heart
@@ -49,11 +72,10 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
         <div className={`absolute inset-0 bg-gradient-to-t from-amber-900/80 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
           <div className="absolute bottom-4 left-4 right-4 text-white">
             <div className="flex items-center gap-2 text-sm mb-2">
-              <Clock className="w-4 h-4" />
-              <span>{product.prepTime}</span>
+              <span>⏱️ {product.prepTime}</span>
             </div>
             <div className="flex flex-wrap gap-1">
-              {product.tags.map((tag, idx) => (
+              {product.tags && product.tags.map((tag, idx) => (
                 <span key={idx} className="bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full text-xs">
                   {tag}
                 </span>
@@ -75,7 +97,7 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
           </div>
         </div>
 
-        <p className="text-amber-700 text-sm mb-3 line-clamp-2 h-10">{product.description}</p>
+        <p className="text-amber-700 text-sm mb-3 line-clamp-2">{product.description}</p>
         
         <div className="text-xs text-amber-600 mb-4">⭐ {product.reviews} reviews</div>
 
@@ -91,6 +113,7 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="p-1 hover:bg-amber-200 rounded-l-lg transition-colors"
+                  disabled={isAdding}
                 >
                   <Minus className="w-4 h-4 text-amber-900" />
                 </button>
@@ -98,24 +121,40 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
                 <button
                   onClick={() => setQuantity(quantity + 1)}
                   className="p-1 hover:bg-amber-200 rounded-r-lg transition-colors"
+                  disabled={isAdding}
                 >
                   <Plus className="w-4 h-4 text-amber-900" />
                 </button>
               </div>
               <button
-                onClick={() => onAddToCart(product, quantity)}
-                className="bg-gradient-to-r from-amber-600 to-amber-700 text-white p-2 rounded-lg hover:shadow-lg hover:scale-110 transition-all duration-300"
+                onClick={handleAddToCart}
+                disabled={isAdding}
+                className="bg-gradient-to-r from-amber-600 to-amber-700 text-white p-2 rounded-lg hover:shadow-lg hover:scale-110 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <ShoppingCart className="w-5 h-5" />
+                {isAdding ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <ShoppingCart className="w-5 h-5" />
+                )}
               </button>
             </div>
           ) : (
             <button
-              onClick={() => onAddToCart(product, 1)}
-              className="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-4 py-2 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2"
+              onClick={handleAddToCart}
+              disabled={isAdding}
+              className="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-4 py-2 rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
             >
-              <Plus className="w-4 h-4" />
-              <span className="text-sm font-medium">Add</span>
+              {isAdding ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-sm font-medium">Adding...</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  <span className="text-sm font-medium">Add</span>
+                </>
+              )}
             </button>
           )}
         </div>

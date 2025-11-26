@@ -3,6 +3,7 @@ import { Package, Search, Filter, X, MapPin, Clock, Phone, CreditCard, Download,
 import ordersData from "../data/ordersData.json"
 import OrderCard from '../components/OrderCard';
 import OrderDetailsModal from '../components/OrderDetailsModal';
+import { orderAPI } from '../services/api';
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState(ordersData.orders);
@@ -11,6 +12,25 @@ const OrdersPage = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch orders from API
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const response = await orderAPI.getAll();
+        setOrders(response.data.data);
+        setFilteredOrders(response.data.data);
+      } catch (error) {
+        console.error('Failed to load orders:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   // Filter orders
   useEffect(() => {
@@ -34,19 +54,56 @@ const OrdersPage = () => {
 
   const statuses = ['All', 'Pending', 'Confirmed', 'Preparing', 'Out for Delivery', 'Delivered', 'Cancelled'];
 
-  const handleReorder = (order) => {
-    console.log('Reorder:', order);
-    // Add reorder logic
+  const handleReorder = async (order) => {
+    try {
+      // Add order items back to cart
+      console.log('Reorder:', order);
+      // You can implement this by adding all items to cart
+      alert('Items added to cart!');
+    } catch (error) {
+      console.error('Reorder failed:', error);
+    }
   };
 
-  const handleCancel = (order) => {
-    console.log('Cancel:', order);
-    // Add cancel logic
+  const handleCancel = async (order) => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) {
+      return;
+    }
+
+    try {
+      const reason = prompt('Please provide a reason for cancellation:') || 'User requested cancellation';
+      await orderAPI.cancel(order._id, reason);
+      
+      // Refresh orders
+      const response = await orderAPI.getAll();
+      setOrders(response.data.data);
+      alert('Order cancelled successfully!');
+    } catch (error) {
+      console.error('Cancel order failed:', error);
+      alert('Failed to cancel order. Please try again.');
+    }
   };
 
-  const handleReview = (order) => {
-    console.log('Review:', order);
-    // Add review logic
+  const handleReview = async (order) => {
+    const rating = prompt('Rate your order (1-5):');
+    const review = prompt('Write your review:');
+
+    if (!rating || !review) return;
+
+    try {
+      await orderAPI.addReview(order._id, {
+        rating: parseInt(rating),
+        review
+      });
+      
+      // Refresh orders
+      const response = await orderAPI.getAll();
+      setOrders(response.data.data);
+      alert('Thank you for your review!');
+    } catch (error) {
+      console.error('Add review failed:', error);
+      alert('Failed to submit review. Please try again.');
+    }
   };
 
   // Calculate stats
@@ -127,7 +184,7 @@ const OrdersPage = () => {
             <div className="flex flex-wrap gap-2">
               {statuses.map((status, idx) => (
                 <button
-                  key={idx}
+                  key={status}
                   onClick={() => setStatusFilter(status)}
                   className={`px-4 py-2 rounded-full font-medium transition-all duration-300 ${
                     statusFilter === status
@@ -149,7 +206,7 @@ const OrdersPage = () => {
           <div className="space-y-6">
             {filteredOrders.map((order, idx) => (
               <div
-                key={order.id}
+                key={order._id}
                 className="animate-slideInUp"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
@@ -180,7 +237,7 @@ const OrdersPage = () => {
         <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
       </button>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -243,6 +300,6 @@ const OrdersPage = () => {
       `}</style>
     </div>
   );
-};
+}
 
 export default OrdersPage;

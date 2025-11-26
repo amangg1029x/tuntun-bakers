@@ -5,10 +5,13 @@ import { ShoppingCart, Plus, Minus, Trash2, ArrowRight, ShoppingBag, Sparkles, T
 import EmptyCart from '../components/EmptyCart';
 import CartItem from '../components/CartItem';
 import OrderSummary from '../components/OrderSummary';
+import { useNavigate } from 'react-router-dom';
 
 const CartPage = () => {
-  const { cart, updateCartQuantity, removeFromCart, getCartTotal, getCartCount } = useCart();
+  const navigate = useNavigate();
+  const { cart, updateCartQuantity, removeFromCart, getCartTotal, getCartCount, loadCart } = useCart();
   const [showConfetti, setShowConfetti] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const subtotal = getCartTotal();
   const deliveryCharge = 40;
@@ -17,6 +20,21 @@ const CartPage = () => {
   const total = subtotal + actualDeliveryCharge;
   const itemCount = getCartCount();
 
+  // Load cart on mount
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        await loadCart();
+      } catch (error) {
+        console.error('Failed to load cart:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCart();
+  }, []);
+
   // Show confetti when free delivery is achieved
   useEffect(() => {
     if (subtotal >= freeDeliveryThreshold && cart.length > 0) {
@@ -24,6 +42,17 @@ const CartPage = () => {
       setTimeout(() => setShowConfetti(false), 3000);
     }
   }, [subtotal, cart.length]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 pt-24 pb-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-amber-900 font-semibold">Loading cart...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 pt-24 pb-16">
@@ -72,7 +101,7 @@ const CartPage = () => {
             <div className="lg:col-span-2 space-y-4">
               {cart.map((item, index) => (
                 <div
-                  key={item.id}
+                  key={item._id}
                   className="animate-slideInLeft"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
@@ -86,8 +115,8 @@ const CartPage = () => {
 
               {/* Continue Shopping Button */}
               <div className="mt-8">
-                <a
-                  href="/products"
+                
+                <a href="/products"
                   className="inline-flex items-center gap-2 text-amber-700 hover:text-amber-900 font-semibold transition-colors group"
                 >
                   <ArrowRight className="w-5 h-5 rotate-180 group-hover:-translate-x-2 transition-transform" />
@@ -137,14 +166,15 @@ const CartPage = () => {
               <p className="text-sm text-amber-700">Total Amount</p>
               <p className="text-2xl font-bold text-amber-950">₹{total}</p>
             </div>
-            <button className="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg active:scale-95 transition-all duration-300 flex items-center gap-2">
-              <Link to = "/checkout">
-                <span>Checkout</span>
-              </Link>
+            
+            <a href="/checkout"
+              className="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg active:scale-95 transition-all duration-300 flex items-center gap-2"
+            >
+              <span>Checkout</span>
               <ArrowRight className="w-5 h-5" />
-            </button>
+            </a>
           </div>
-          {!actualDeliveryCharge && subtotal >= freeDeliveryThreshold && (
+          {actualDeliveryCharge === 0 && subtotal >= freeDeliveryThreshold && (
             <p className="text-xs text-green-600 font-semibold text-center flex items-center justify-center gap-1">
               <Sparkles className="w-3 h-3" />
               Free Delivery Applied!
@@ -153,7 +183,7 @@ const CartPage = () => {
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }

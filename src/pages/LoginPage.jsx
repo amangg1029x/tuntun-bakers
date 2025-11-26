@@ -13,17 +13,21 @@ const LoginPage = () => {
     rememberMe: false
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
-    setTimeout(() => {
-      setIsLoading(false);
-      // Call login with mock data (replace with API call later)
-      login();
+    try {
+      await login(formData.email, formData.password);
       navigate('/profile');
-    }, 2000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -88,7 +92,11 @@ const LoginPage = () => {
               </div>
             </div>
           </div>
-
+          {error && (
+            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-4">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
           {/* Right Side - Login Form */}
           <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
             <div className="mb-8">

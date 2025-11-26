@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, User, Phone, MapPin, ArrowRight, Sparkles, ShoppingBag, Heart, Award } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, Mail, Lock, User, Phone, MapPin, ArrowRight } from 'lucide-react';
+import { register } from '../services/api';
 
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,19 +18,52 @@ const RegisterPage = () => {
     acceptTerms: false
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const navigate = useNavigate(); // add inside component
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (currentStep < 2) {
       setCurrentStep(2);
-    } else {
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        console.log('Register:', formData);
-      }, 2000);
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      // call the register helper which should return the created user / token
+      // your register function might be: (payload) => api.post('/auth/register', payload)
+      const res = await register({
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password
+      });
+
+      // If your API returns success, navigate
+      // If you expect some data to validate, check `res.data` first
+      navigate('/profile');
+    } catch (err) {
+      console.error('Register error:', err);
+      // prefer backend-provided message, fallback to generic
+      const backendMessage =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        (typeof err?.response?.data === 'string' ? err.response.data : null);
+      setError(backendMessage || err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
+
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -111,7 +146,11 @@ const RegisterPage = () => {
               </div>
             </div>
           </div>
-
+          {error && (
+            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-4">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
           {/* Right Side - Register Form */}
           <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
             {/* Progress Steps */}
@@ -343,7 +382,7 @@ const RegisterPage = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes blob {
           0%, 100% {
             transform: translate(0, 0) scale(1);
