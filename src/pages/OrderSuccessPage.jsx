@@ -133,7 +133,7 @@ const OrderSuccessPage = () => {
               <h3 className="font-bold text-amber-950 mb-4">Order Summary</h3>
               <div className="space-y-3 mb-4">
                 {order.items.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between">
+                  <div key={item._id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{item.emoji}</span>
                       <div>

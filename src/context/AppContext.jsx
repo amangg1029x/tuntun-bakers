@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useUser as useClerkUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { authAPI, cartAPI, favoriteAPI, userAPI } from '../services/api';
 
 const CartContext = createContext();
@@ -17,7 +18,6 @@ export const useFavorites = () => {
   return context;
 };
 
-
 export const useUser = () => {
   const context = useContext(UserContext);
   if (!context) throw new Error('useUser must be used within AppProvider');
@@ -25,59 +25,135 @@ export const useUser = () => {
 };
 
 export const AppProvider = ({ children }) => {
+  const { user: clerkUser, isLoaded: clerkLoaded } = useClerkUser();
+  const { getToken, isSignedIn } = useClerkAuth();
+  
   const [cart, setCart] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [tokenReady, setTokenReady] = useState(false);
 
-  // Check if user is logged in on mount
+  // Get and store Clerk token
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
+    const setupToken = async () => {
+      if (clerkLoaded && isSignedIn) {
         try {
+          // Get token WITHOUT specifying template
+          const token = await getToken();
+          if (token) {
+            localStorage.setItem('clerk-token', token);
+            setTokenReady(true);
+            console.log('✅ Clerk token set');
+          } else {
+            console.error('❌ No token received from Clerk');
+            setTokenReady(false);
+          }
+        } catch (error) {
+          console.error('❌ Failed to get token:', error);
+          setTokenReady(false);
+        }
+      } else if (clerkLoaded && !isSignedIn) {
+        localStorage.removeItem('clerk-token');
+        setTokenReady(false);
+      }
+    };
+
+    setupToken();
+  }, [clerkLoaded, isSignedIn, getToken]);
+
+  // Sync user and load data only when token is ready
+  useEffect(() => {
+    const syncUser = async () => {
+      if (!clerkLoaded) {
+        console.log('⏳ Waiting for Clerk to load...');
+        return;
+      }
+
+      if (isSignedIn && clerkUser && tokenReady) {
+        console.log('🔄 Syncing user with backend...');
+        try {
+          // Fetch user from backend (will create if doesn't exist)
           const response = await authAPI.getMe();
           setUser(response.data.data);
-          setIsAuthenticated(true);
+          console.log('✅ User synced:', response.data.data.name);
           
-          // Load cart and favorites
-          await loadCart();
-          await loadFavorites();
+          // Load cart and favorites ONLY after user is synced
+          console.log('📦 Loading cart and favorites...');
+          await Promise.all([
+            loadCart(),
+            loadFavorites()
+          ]);
+          console.log('✅ Cart and favorites loaded');
         } catch (error) {
-          console.error('Auth check failed:', error);
-          localStorage.removeItem('token');
+          console.error('❌ User sync failed:', error);
+          
+          // If 401, try to refresh token once
+          if (error.response?.status === 401) {
+            console.log('🔄 Attempting token refresh...');
+            try {
+              const newToken = await getToken();
+              if (newToken) {
+                localStorage.setItem('clerk-token', newToken);
+                console.log('✅ Token refreshed, retrying sync...');
+                
+                // Retry sync
+                const response = await authAPI.getMe();
+                setUser(response.data.data);
+                await Promise.all([loadCart(), loadFavorites()]);
+                console.log('✅ Retry successful');
+              }
+            } catch (retryError) {
+              console.error('❌ Token refresh failed:', retryError);
+            }
+          }
         }
+      } else if (!isSignedIn) {
+        // User is not signed in - clear everything
+        console.log('👤 User not signed in');
+        setUser(null);
+        setCart([]);
+        setFavorites([]);
       }
+      
       setLoading(false);
     };
 
-    checkAuth();
-  }, []);
+    syncUser();
+  }, [clerkLoaded, isSignedIn, clerkUser, tokenReady, getToken]);
 
   // ========================================
   // CART FUNCTIONS
   // ========================================
   const loadCart = async () => {
+    if (!isSignedIn || !tokenReady) {
+      console.log('⏭️ Skipping cart load (not authenticated)');
+      return;
+    }
+    
     try {
       const response = await cartAPI.get();
       setCart(response.data.data.items || []);
     } catch (error) {
       console.error('Load cart failed:', error);
+      if (error.response?.status !== 401) {
+        console.error('Cart error details:', error.response?.data);
+      }
     }
   };
 
   const addToCart = async (product, quantity = 1) => {
+    if (!isSignedIn) {
+      throw new Error('Please sign in to add items to cart');
+    }
+
     try {
-      // Extract product ID - handle both MongoDB object and plain ID
       const productId = product._id || product.id;
       
       if (!productId) {
         throw new Error('Product ID is missing');
       }
 
-      console.log('Adding to cart:', { productId, quantity, product }); // Debug log
-      
       const response = await cartAPI.add(productId, quantity);
       setCart(response.data.data.items || []);
       return response.data;
@@ -131,16 +207,28 @@ export const AppProvider = ({ children }) => {
   // FAVORITES FUNCTIONS
   // ========================================
   const loadFavorites = async () => {
+    if (!isSignedIn || !tokenReady) {
+      console.log('⏭️ Skipping favorites load (not authenticated)');
+      return;
+    }
+    
     try {
       const response = await favoriteAPI.getAll();
       const productIds = response.data.data.map(p => p._id);
       setFavorites(productIds);
     } catch (error) {
       console.error('Load favorites failed:', error);
+      if (error.response?.status !== 401) {
+        console.error('Favorites error details:', error.response?.data);
+      }
     }
   };
 
   const toggleFavorite = async (productId) => {
+    if (!isSignedIn) {
+      throw new Error('Please sign in to manage favorites');
+    }
+
     try {
       const response = await favoriteAPI.toggle(productId);
       const productIds = response.data.data.map(p => p._id);
@@ -156,58 +244,8 @@ export const AppProvider = ({ children }) => {
   };
 
   // ========================================
-  // USER FUNCTIONS
+  // USER FUNCTIONS (Updated for Clerk)
   // ========================================
-  const login = async (email, password) => {
-    try {
-      const response = await authAPI.login({ email, password });
-      const { token, user } = response.data;
-      
-      localStorage.setItem('token', token);
-      setUser(user);
-      setIsAuthenticated(true);
-      
-      // Load cart and favorites after login
-      await loadCart();
-      await loadFavorites();
-      
-      return response.data;
-    } catch (error) {
-      console.error('Login failed:', error);
-      throw error;
-    }
-  };
-
-  const register = async (userData) => {
-    try {
-      const response = await authAPI.register(userData);
-      const { token, user } = response.data;
-      
-      localStorage.setItem('token', token);
-      setUser(user);
-      setIsAuthenticated(true);
-      
-      return response.data;
-    } catch (error) {
-      console.error('Register failed:', error);
-      throw error;
-    }
-  };
-
-  const logout = async () => {
-    try {
-      await authAPI.logout();
-    } catch (error) {
-      console.error('Logout failed:', error);
-    } finally {
-      localStorage.removeItem('token');
-      setUser(null);
-      setIsAuthenticated(false);
-      setCart([]);
-      setFavorites([]);
-    }
-  };
-
   const updateUser = async (updatedData) => {
     try {
       const response = await userAPI.updateProfile(updatedData);
@@ -304,11 +342,9 @@ export const AppProvider = ({ children }) => {
 
   const userValue = {
     user,
-    isAuthenticated,
+    isAuthenticated: isSignedIn,
     loading,
-    login,
-    register,
-    logout,
+    clerkUser,
     updateUser,
     updateUserPreferences,
     addAddress,

@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useCart } from '../context/AppContext';
-import { useNavigate } from 'react-router-dom';
-import { MapPin, Plus, Check, CreditCard, Smartphone, Banknote, ChevronRight, ChevronLeft, Truck, Package, Clock, Edit2, Trash2, X, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
+import React from 'react';
+import { MapPin, Check, Edit2, Trash2 } from 'lucide-react';
 
 const AddressCard = ({ address, isSelected, onSelect, onEdit, onDelete }) => {
   return (
@@ -39,15 +37,17 @@ const AddressCard = ({ address, isSelected, onSelect, onEdit, onDelete }) => {
               onEdit(address);
             }}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            title="Edit address"
           >
             <Edit2 className="w-4 h-4" />
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onDelete(address.id);
+              onDelete(address._id);
             }}
             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            title="Delete address"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -56,9 +56,12 @@ const AddressCard = ({ address, isSelected, onSelect, onEdit, onDelete }) => {
 
       {/* Address Details */}
       <div className="space-y-2 text-amber-700">
-        <p className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 flex-shrink-0" />
-          <span>{address.address}, {address.landmark}</span>
+        <p className="flex items-start gap-2">
+          <MapPin className="w-4 h-4 flex-shrink-0 mt-1" />
+          <span>
+            {address.address}
+            {address.landmark && `, ${address.landmark}`}
+          </span>
         </p>
         <p className="pl-6">{address.city} - {address.pincode}</p>
         <p className="pl-6 font-semibold">{address.phone}</p>

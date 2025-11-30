@@ -1,12 +1,7 @@
 import axios from 'axios';
 
-export const register = (payload) => {
-  return api.post('/auth/register', payload);
-};
-
-
 // Base API URL
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -14,16 +9,19 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Important for cookies
+  withCredentials: true,
 });
 
-// Add token to requests automatically
+// Add Clerk token to requests automatically
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
+  async (config) => {
+    // Get Clerk token from localStorage
+    const token = localStorage.getItem('clerk-token');
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
     return config;
   },
   (error) => {
@@ -31,16 +29,25 @@ api.interceptors.request.use(
   }
 );
 
-// Handle response errors
+// Handle response errors - simplified without retry logic
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Unauthorized - clear token and redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('tuntun-user');
-      window.location.href = '/login';
+  async (error) => {
+    // Don't redirect if we're on public pages or auth pages
+    const publicPaths = ['/', '/products', '/about', '/contact', '/sign-in', '/sign-up'];
+    const currentPath = window.location.pathname;
+    const isPublicPage = publicPaths.some(path => currentPath === path || currentPath.startsWith(path));
+
+    if (error.response?.status === 401 && !isPublicPage) {
+      console.error('❌ Unauthorized request - redirecting to sign in');
+      localStorage.removeItem('clerk-token');
+      
+      // Only redirect if not already on sign-in page
+      if (!currentPath.includes('/sign-in')) {
+        window.location.href = '/sign-in';
+      }
     }
+
     return Promise.reject(error);
   }
 );
@@ -49,12 +56,8 @@ api.interceptors.response.use(
 // AUTH APIs
 // ========================================
 export const authAPI = {
-  register: (data) => api.post('/auth/register', data),
-  login: (data) => api.post('/auth/login', data),
-  logout: () => api.post('/auth/logout'),
   getMe: () => api.get('/auth/me'),
-  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
+  logout: () => api.post('/auth/logout'),
 };
 
 // ========================================
@@ -77,7 +80,6 @@ export const userAPI = {
   
   // Preferences
   updatePreferences: (data) => api.put('/user/preferences', data),
-  changePassword: (data) => api.put('/user/change-password', data),
 };
 
 // ========================================
@@ -127,6 +129,17 @@ export const favoriteAPI = {
   remove: (productId) => api.delete(`/favorites/remove/${productId}`),
   toggle: (productId) => api.post(`/favorites/toggle/${productId}`),
   clear: () => api.delete('/favorites/clear'),
+};
+
+// ========================================
+// PAYMENT APIs (Razorpay)
+// ========================================
+export const paymentAPI = {
+  createOrder: (data) => api.post('/payment/create-order', data),
+  verify: (data) => api.post('/payment/verify', data),
+  recordFailure: (data) => api.post('/payment/failure', data),
+  getDetails: (paymentId) => api.get(`/payment/${paymentId}`),
+  refund: (data) => api.post('/payment/refund', data), // Admin only
 };
 
 export default api;

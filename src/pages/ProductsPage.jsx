@@ -15,6 +15,7 @@ const ProductsPage = () => {
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Fetch products from API
   useEffect(() => {
@@ -31,6 +32,7 @@ const ProductsPage = () => {
         setProducts(Array.isArray(items) ? items : []);
       } catch (error) {
         console.error('Failed to load products:', error);
+        setError('Failed to load products. Please try again.');
         setProducts([]);
       } finally {
         setLoading(false);
@@ -77,6 +79,15 @@ const ProductsPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50">
+      {error && (
+  <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-center">
+    <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
+    <p className="text-red-700">{error}</p>
+    <button onClick={fetchProducts} className="mt-4 btn-primary">
+      Retry
+    </button>
+  </div>
+)}
       {/* Header */}
       <div className="bg-white shadow-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 py-6">
@@ -194,7 +205,7 @@ const ProductsPage = () => {
         />
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;

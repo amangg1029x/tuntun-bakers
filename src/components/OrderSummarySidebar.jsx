@@ -17,13 +17,13 @@ const OrderSummarySidebar = ({ cart, subtotal, deliveryCharge, total }) => {
         {/* Items */}
         <div className="max-h-64 overflow-y-auto space-y-3">
           {cart.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 p-3 bg-amber-50 rounded-xl">
+            <div key={item._id} className="flex items-center gap-3 p-3 bg-amber-50 rounded-xl">
               <span className="text-3xl">{item.emoji}</span>
               <div className="flex-1">
                 <p className="font-semibold text-amber-900 text-sm">{item.name}</p>
                 <p className="text-xs text-amber-700">Qty: {item.quantity}</p>
               </div>
-              <p className="font-bold text-amber-900">₹{item.price * item.quantity}</p>
+              <p className="font-bold text-amber-900">₹{item.product.price * item.quantity}</p>
             </div>
           ))}
         </div>

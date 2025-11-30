@@ -8,6 +8,22 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
     confirmPassword: ''
   });
 
+  const validatePasswords = () => {
+    if (formData.newPassword === formData.currentPassword) {
+      setError('New password must be different from current password');
+      return false;
+    }
+    if (formData.newPassword.length < 8) {
+      setError('Password must be at least 8 characters');
+      return false;
+    }
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.newPassword)) {
+      setError('Password must contain uppercase, lowercase, and number');
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     // Handle password change

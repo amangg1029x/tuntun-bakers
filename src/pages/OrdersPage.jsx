@@ -4,6 +4,7 @@ import ordersData from "../data/ordersData.json"
 import OrderCard from '../components/OrderCard';
 import OrderDetailsModal from '../components/OrderDetailsModal';
 import { orderAPI } from '../services/api';
+import EmptyOrders from '../components/EmptyOrders';
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState(ordersData.orders);

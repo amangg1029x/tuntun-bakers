@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useCart } from '../context/AppContext';
-import { useNavigate } from 'react-router-dom';
-import { MapPin, Plus, Check, CreditCard, Smartphone, Banknote, ChevronRight, ChevronLeft, Truck, Package, Clock, Edit2, Trash2, X, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
+import React from 'react';
+import { Check, CreditCard, Banknote } from 'lucide-react';
 
 const PaymentMethod = ({ method, isSelected, onSelect }) => {
-  const paymentIcons = {
-    'upi': Smartphone,
-    'cod': Banknote
+  const iconMap = {
+    razorpay: CreditCard,
+    cod: Banknote,
+    upi: CreditCard,
+    card: CreditCard
   };
 
-  const Icon = paymentIcons[method.id];
+  const Icon = iconMap[method.id] || CreditCard;
 
   return (
     <div
@@ -37,6 +37,16 @@ const PaymentMethod = ({ method, isSelected, onSelect }) => {
           <h4 className="font-bold text-amber-950">{method.name}</h4>
           <p className="text-sm text-amber-700">{method.description}</p>
         </div>
+
+        {method.id === 'razorpay' && (
+          <div className="flex items-center gap-2 text-xs text-amber-600">
+            <img 
+              src="https://cdn.razorpay.com/static/assets/logo/payment.svg" 
+              alt="Razorpay" 
+              className="h-6"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

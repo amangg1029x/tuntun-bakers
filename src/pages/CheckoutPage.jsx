@@ -1,105 +1,198 @@
 import React, { useState, useEffect } from 'react';
-import { useCart } from '../context/AppContext';
+import { useCart, useUser } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Plus, Check, CreditCard, Smartphone, Banknote, ChevronRight, ChevronLeft, Truck, Package, Clock, Edit2, Trash2, X, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 import ProgressStepper from '../components/ProgressStepper';
 import AddressCard from '../components/AddressCard';
 import AddAddressModal from '../components/AddAddressModal';
 import PaymentMethod from '../components/PaymentMethod';
-import mockSavedAddresses from "../data/mockSavedAddresses.json"
 import OrderSummarySidebar from '../components/OrderSummarySidebar';
 import { orderAPI } from '../services/api';
+import { useRazorpay } from '../hooks/useRazorpay';
+import { toast } from 'react-hot-toast';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { cart, getCartTotal, getCartCount, clearCart } = useCart();
+  const { user, addAddress, updateAddress, deleteAddress } = useUser();
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [addresses, setAddresses] = useState(mockSavedAddresses);
-  const [selectedAddress, setSelectedAddress] = useState(mockSavedAddresses[0]);
+  const [selectedAddress, setSelectedAddress] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
   const [savePaymentMethod, setSavePaymentMethod] = useState(false);
   const [sendUpdates, setSendUpdates] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { initializePayment, isLoaded: razorpayLoaded } = useRazorpay();
 
   const steps = ['Address', 'Payment', 'Confirm'];
 
   const paymentMethods = [
     {
-      id: 'upi',
-      name: 'UPI Payment',
-      description: 'PhonePe, Google Pay, Paytm',
-      color: 'bg-gradient-to-br from-purple-500 to-purple-600'
+      id: 'razorpay',
+      name: 'Online Payment',
+      description: 'Credit/Debit Card, UPI, NetBanking',
+      color: 'bg-gradient-to-br from-blue-500 to-blue-600',
+      icon: CreditCard
     },
     {
       id: 'cod',
       name: 'Cash on Delivery',
       description: 'Pay when you receive',
-      color: 'bg-gradient-to-br from-green-500 to-green-600'
+      color: 'bg-gradient-to-br from-green-500 to-green-600',
+      icon: Banknote
     }
   ];
 
   const subtotal = getCartTotal();
-  const deliveryCharge = subtotal >= 499 ? 0 : 40;
   const freeDeliveryThreshold = 499;
+  const deliveryCharge = 0;
   const actualDeliveryCharge = subtotal >= freeDeliveryThreshold ? 0 : deliveryCharge;
   const total = subtotal + actualDeliveryCharge;
   const itemCount = getCartCount();
 
+  // Load user addresses and set default
+  useEffect(() => {
+    if (user && user.addresses) {
+      const defaultAddr = user.addresses.find(addr => addr.isDefault);
+      if (defaultAddr) {
+        setSelectedAddress(defaultAddr);
+      } else if (user.addresses.length > 0) {
+        setSelectedAddress(user.addresses[0]);
+      }
+      setLoading(false);
+    } else if (user) {
+      setLoading(false);
+    }
+  }, [user]);
+
   // Redirect if cart is empty
   useEffect(() => {
-    if (cart.length === 0) {
+    if (cart.length === 0 && !loading) {
       navigate('/cart');
     }
-  }, [cart, navigate]);
+  }, [cart, loading, navigate]);
 
-  const handleAddAddress = (address) => {
-    if (editingAddress) {
-      setAddresses(prev => prev.map(addr => addr.id === address.id ? address : addr));
-    } else {
-      setAddresses(prev => [...prev, address]);
+  const handleAddAddress = async (addressIdOrData, addressData) => {
+    try {
+      if (typeof addressIdOrData === 'string') {
+        // Editing existing address
+        await updateAddress(addressIdOrData, addressData);
+      } else {
+        // Adding new address
+        await addAddress(addressIdOrData);
+      }
+    } catch (error) {
+      console.error('Failed to save address:', error);
+      throw error;
+    } finally {
+      setEditingAddress(null);
     }
-    setEditingAddress(null);
   };
 
-  const handleDeleteAddress = (id) => {
-    setAddresses(prev => prev.filter(addr => addr.id !== id));
+  const handleDeleteAddress = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this address?')) {
+      return;
+    }
+
+    try {
+      await deleteAddress(id);
+      if (selectedAddress?._id === id) {
+        setSelectedAddress(null);
+      }
+    } catch (error) {
+      console.error('Delete failed:', error);
+      alert('Failed to delete address');
+    }
   };
 
   const handlePlaceOrder = async () => {
+    if (!selectedAddress || !selectedPayment) {
+      alert('Please select delivery address and payment method');
+      return;
+    }
+
     setIsProcessing(true);
+
+    
     
     try {
+      // Create order in database first
       const orderData = {
         items: cart.map(item => ({
-          product: item.product._id || item.product.id,
+          product: item.product._id,
           quantity: item.quantity
         })),
-        deliveryAddress: selectedAddress,
+        deliveryAddress: {
+          name: selectedAddress.name,
+          phone: selectedAddress.phone,
+          address: selectedAddress.address,
+          landmark: selectedAddress.landmark || '',
+          city: selectedAddress.city,
+          pincode: selectedAddress.pincode
+        },
         paymentMethod: selectedPayment.id,
         subtotal,
         deliveryCharge: actualDeliveryCharge,
         totalAmount: total,
-        notes: '' // You can add notes field if needed
+        notes: ''
       };
       
+      console.log('Creating order:', orderData);
       const response = await orderAPI.create(orderData);
-      
-      // Navigate to success page with order data
-      navigate('/order-success', { 
-        state: { 
-          order: {
-            orderId: response.data.data.orderNumber,
-            ...response.data.data
+      const createdOrder = response.data.data;
+      console.log('Order created:', createdOrder);
+
+      // If payment method is Razorpay, initiate payment
+      if (selectedPayment.id === 'razorpay') {
+        if (!razorpayLoaded) {
+          throw new Error('Payment gateway not loaded. Please refresh and try again.');
+        }
+
+        initializePayment({
+          amount: total,
+          orderId: createdOrder._id,
+          onSuccess: async (paymentDetails) => {
+            console.log('Payment successful:', paymentDetails);
+            
+            // Clear cart
+            await clearCart();
+            
+            // Navigate to success page
+            navigate('/order-success', { 
+              state: { 
+                order: createdOrder,
+                paymentDetails
+              } 
+            });
+          },
+          onFailure: (error) => {
+            console.error('Payment failed:', error);
+            setIsProcessing(false);
+
+            // Message dikhana
+            toast.error(
+              error?.error?.description || 'Payment failed. Please try again.'
+            );
+
+            // Cart page par bhejna
+            navigate('/cart');
           }
-        } 
-      });
+        });
+      } else {
+        // COD - directly proceed
+        await clearCart();
+        navigate('/order-success', { 
+          state: { 
+            order: createdOrder
+          } 
+        });
+      }
     } catch (error) {
       console.error('Order creation failed:', error);
-      alert('Failed to place order. Please try again.');
-    } finally {
+      alert(error.response?.data?.message || 'Failed to place order. Please try again.');
       setIsProcessing(false);
     }
   };
@@ -109,6 +202,17 @@ const CheckoutPage = () => {
     if (currentStep === 2) return selectedPayment !== null;
     return true;
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 pt-24 pb-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-amber-900 font-semibold">Loading checkout...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (cart.length === 0) return null;
 
@@ -147,21 +251,38 @@ const CheckoutPage = () => {
                   </button>
                 </div>
 
-                <div className="grid md:ml-4 md:mr-4 gap-4">
-                  {addresses.map((address) => (
-                    <AddressCard
-                      key={address.id}
-                      address={address}
-                      isSelected={selectedAddress?.id === address.id}
-                      onSelect={() => setSelectedAddress(address)}
-                      onEdit={(addr) => {
-                        setEditingAddress(addr);
+                {!user?.addresses || user.addresses.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-12 text-center shadow-lg">
+                    <MapPin className="w-16 h-16 text-amber-300 mx-auto mb-4" />
+                    <h4 className="text-xl font-bold text-amber-950 mb-2">No Addresses Saved</h4>
+                    <p className="text-amber-700 mb-6">Add your delivery address to continue</p>
+                    <button
+                      onClick={() => {
+                        setEditingAddress(null);
                         setShowAddressModal(true);
                       }}
-                      onDelete={handleDeleteAddress}
-                    />
-                  ))}
-                </div>
+                      className="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+                    >
+                      Add Address
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {user.addresses.map((address) => (
+                      <AddressCard
+                        key={address._id}
+                        address={address}
+                        isSelected={selectedAddress?._id === address._id}
+                        onSelect={() => setSelectedAddress(address)}
+                        onEdit={(addr) => {
+                          setEditingAddress(addr);
+                          setShowAddressModal(true);
+                        }}
+                        onDelete={handleDeleteAddress}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -186,18 +307,6 @@ const CheckoutPage = () => {
 
                 {/* Payment Options */}
                 <div className="bg-white rounded-2xl p-6 shadow-lg space-y-4">
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={savePaymentMethod}
-                      onChange={(e) => setSavePaymentMethod(e.target.checked)}
-                      className="w-5 h-5 rounded border-2 border-amber-300 text-amber-600 focus:ring-2 focus:ring-amber-500"
-                    />
-                    <span className="text-amber-900 font-medium group-hover:text-amber-700">
-                      Save this payment method for future orders
-                    </span>
-                  </label>
-
                   <label className="flex items-center gap-3 cursor-pointer group">
                     <input
                       type="checkbox"
@@ -236,10 +345,10 @@ const CheckoutPage = () => {
                     </button>
                   </div>
                   <div className="bg-amber-50 rounded-xl p-4">
-                    <p className="font-semibold text-amber-950 mb-2">{selectedAddress.name}</p>
-                    <p className="text-sm text-amber-700">{selectedAddress.address}, {selectedAddress.landmark}</p>
-                    <p className="text-sm text-amber-700">{selectedAddress.city} - {selectedAddress.pincode}</p>
-                    <p className="text-sm text-amber-700 font-semibold mt-2">{selectedAddress.phone}</p>
+                    <p className="font-semibold text-amber-950 mb-2">{selectedAddress?.name}</p>
+                    <p className="text-sm text-amber-700">{selectedAddress?.address}{selectedAddress?.landmark ? `, ${selectedAddress.landmark}` : ''}</p>
+                    <p className="text-sm text-amber-700">{selectedAddress?.city} - {selectedAddress?.pincode}</p>
+                    <p className="text-sm text-amber-700 font-semibold mt-2">{selectedAddress?.phone}</p>
                   </div>
                 </div>
 
@@ -258,16 +367,16 @@ const CheckoutPage = () => {
                     </button>
                   </div>
                   <div className="bg-amber-50 rounded-xl p-4 flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${selectedPayment.color}`}>
-                      {selectedPayment.id === 'upi' ? (
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${selectedPayment?.color}`}>
+                      {selectedPayment?.id === 'upi' ? (
                         <Smartphone className="w-6 h-6 text-white" />
                       ) : (
                         <Banknote className="w-6 h-6 text-white" />
                       )}
                     </div>
                     <div>
-                      <p className="font-semibold text-amber-950">{selectedPayment.name}</p>
-                      <p className="text-sm text-amber-700">{selectedPayment.description}</p>
+                      <p className="font-semibold text-amber-950">{selectedPayment?.name}</p>
+                      <p className="text-sm text-amber-700">{selectedPayment?.description}</p>
                     </div>
                   </div>
                 </div>
@@ -349,10 +458,6 @@ const CheckoutPage = () => {
       />
 
       <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
         @keyframes fadeInDown {
           from {
             opacity: 0;
@@ -361,16 +466,6 @@ const CheckoutPage = () => {
           to {
             opacity: 1;
             transform: translateY(0);
-          }
-        }
-        @keyframes scaleIn {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
           }
         }
         @keyframes slideInLeft {
@@ -383,31 +478,11 @@ const CheckoutPage = () => {
             transform: translateX(0);
           }
         }
-        @keyframes pulse-ring {
-          0% {
-            box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7);
-          }
-          70% {
-            box-shadow: 0 0 0 10px rgba(217, 119, 6, 0);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out;
-        }
         .animate-fadeInDown {
           animation: fadeInDown 0.6s ease-out;
         }
-        .animate-scaleIn {
-          animation: scaleIn 0.3s ease-out;
-        }
         .animate-slideInLeft {
           animation: slideInLeft 0.6s ease-out;
-        }
-        .animate-pulse-ring {
-          animation: pulse-ring 2s ease-out infinite;
         }
       `}</style>
     </div>

@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { useUser, useFavorites } from '../context/AppContext';
+import { useUser, useFavorites, useCart } from '../context/AppContext';
 import { productAPI } from '../services/api';
 import Avatar from '../components/Avatar';
+import AddAddressModal from '../components/AddAddressModal';
 import EditProfileModal from '../components/EditProfileModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import LoginPrompt from '../components/LoginPrompt';
-import { User, Mail, Phone, MapPin, CreditCard, Bell, Lock, LogOut, Edit2, Trash2, Plus, Check, ShoppingBag, Heart, Star, Calendar, IndianRupee, ChevronRight, AlertCircle } from 'lucide-react';
+import { User, Mail, Phone, MapPin, CreditCard, Bell, Lock, Edit2, Trash2, Plus, Check, ShoppingBag, Heart, Star, Calendar, IndianRupee, ChevronRight, AlertCircle } from 'lucide-react';
+import ProductCard from '../components/ProductCard';
 
 const ProfilePage = () => {
-  const { user, isAuthenticated, loading: userLoading, logout, updateUser, updateUserPreferences, addAddress, updateAddress, deleteAddress, deletePaymentMethod } = useUser();
-  const { favorites } = useFavorites();
-  
+  const { user, isAuthenticated, loading: userLoading, updateUser, updateUserPreferences, addAddress, updateAddress, deleteAddress, deletePaymentMethod } = useUser();
+  const { cart, addToCart } = useCart();
+  const { favorites, toggleFavorite } = useFavorites();
   const [activeTab, setActiveTab] = useState('overview');
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(null);
 
   // Load favorite products
   useEffect(() => {
@@ -70,13 +74,6 @@ const ProfilePage = () => {
     { id: 'security', label: 'Security', icon: Lock }
   ];
 
-  const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
-      logout();
-      window.location.href = '/';
-    }
-  };
-
   const handleUpdateProfile = async (formData) => {
     try {
       await updateUser(formData);
@@ -121,6 +118,22 @@ const ProfilePage = () => {
     } catch (error) {
       console.error('Delete payment method failed:', error);
       alert('❌ Failed to delete payment method.');
+    }
+  };
+
+  const handleSaveAddress = async (addressIdOrData, addressData) => {
+    try {
+      if (typeof addressIdOrData === 'string') {
+        // Editing existing address
+        await updateAddress(addressIdOrData, addressData);
+      } else {
+        // Adding new address
+        await addAddress(addressIdOrData);
+      }
+      alert('✅ Address saved successfully!');
+    } catch (error) {
+      console.error('Failed to save address:', error);
+      throw error; // Let modal handle the error
     }
   };
 
@@ -169,14 +182,6 @@ const ProfilePage = () => {
                     </button>
                   );
                 })}
-
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-300 mt-4"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span className="font-medium">Logout</span>
-                </button>
               </nav>
             </div>
           </div>
@@ -283,8 +288,8 @@ const ProfilePage = () => {
                   </h3>
                   <button 
                     onClick={() => {
-                      // You can add a modal for adding new address
-                      alert('Add address functionality coming soon!');
+                      setEditingAddress(null);
+                      setShowAddressModal(true);
                     }}
                     className="flex items-center gap-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white px-4 py-2 rounded-xl font-semibold hover:shadow-lg transition-all"
                   >
@@ -298,11 +303,20 @@ const ProfilePage = () => {
                     <MapPin className="w-16 h-16 text-amber-300 mx-auto mb-4" />
                     <h4 className="text-xl font-bold text-amber-950 mb-2">No Addresses Saved</h4>
                     <p className="text-amber-700 mb-6">Add your delivery address to place orders faster!</p>
+                    <button
+                      onClick={() => {
+                        setEditingAddress(null);
+                        setShowAddressModal(true);
+                      }}
+                      className="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+                    >
+                      Add Your First Address
+                    </button>
                   </div>
                 ) : (
                   <div className="grid gap-4">
                     {user.addresses.map((address) => (
-                      <div key={address._id || address.id} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all">
+                      <div key={address._id} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
                             <h4 className="font-bold text-amber-950">{address.name}</h4>
@@ -313,11 +327,17 @@ const ProfilePage = () => {
                             )}
                           </div>
                           <div className="flex gap-2">
-                            <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                            <button 
+                              onClick={() => {
+                                setEditingAddress(address);
+                                setShowAddressModal(true);
+                              }}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            >
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleDeleteAddress(address._id || address.id)}
+                              onClick={() => handleDeleteAddress(address._id)}
                               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -326,7 +346,7 @@ const ProfilePage = () => {
                         </div>
 
                         <div className="space-y-2 text-amber-700">
-                          <p>{address.address}, {address.landmark}</p>
+                          <p>{address.address}{address.landmark ? `, ${address.landmark}` : ''}</p>
                           <p>{address.city} - {address.pincode}</p>
                           <p className="font-semibold">{address.phone}</p>
                         </div>
@@ -423,26 +443,17 @@ const ProfilePage = () => {
                 ) : (
                   <div className="grid md:grid-cols-2 gap-6">
                     {favoriteProducts.map((product) => (
-                      <div key={product._id} className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all overflow-hidden group">
-                        <div className="bg-gradient-to-br from-amber-100 to-orange-100 aspect-video flex items-center justify-center">
-                          <span className="text-8xl group-hover:scale-110 transition-transform duration-300">{product.emoji}</span>
-                        </div>
-                        <div className="p-6">
-                          <div className="flex items-start justify-between mb-2">
-                            <h4 className="text-lg font-bold text-amber-950">{product.name}</h4>
-                            <div className="flex items-center gap-1 bg-amber-100 px-2 py-1 rounded-full">
-                              <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                              <span className="text-sm font-bold text-amber-900">{product.rating}</span>
-                            </div>
-                          </div>
-                          <p className="text-sm text-amber-700 mb-4 line-clamp-2">{product.description}</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-2xl font-bold text-amber-900">₹{product.price}</span>
-                            <button className="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-4 py-2 rounded-lg font-semibold hover:shadow-lg transition-all">
-                              Add to Cart
-                            </button>
-                          </div>
-                        </div>
+                      <div
+                        key={product._id}
+                        style={{ animationDelay: `${product.id * 50}ms` }}
+                        className="animate-fadeInUp"
+                      >
+                        <ProductCard
+                          product={product}
+                          onAddToCart={addToCart}
+                          isFavorite={favorites.includes(product._id)}
+                          onToggleFavorite={toggleFavorite}
+                        />
                       </div>
                     ))}
                   </div>
@@ -561,6 +572,16 @@ const ProfilePage = () => {
       <ChangePasswordModal
         isOpen={showChangePassword}
         onClose={() => setShowChangePassword(false)}
+      />
+
+      <AddAddressModal
+        isOpen={showAddressModal}
+        onClose={() => {
+          setShowAddressModal(false);
+          setEditingAddress(null);
+        }}
+        onSave={handleSaveAddress}
+        editAddress={editingAddress}
       />
 
       <style>{`

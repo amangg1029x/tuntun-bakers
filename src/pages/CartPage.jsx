@@ -14,7 +14,7 @@ const CartPage = () => {
   const [loading, setLoading] = useState(true);
 
   const subtotal = getCartTotal();
-  const deliveryCharge = 40;
+  const deliveryCharge = 0;
   const freeDeliveryThreshold = 499;
   const actualDeliveryCharge = subtotal >= freeDeliveryThreshold ? 0 : deliveryCharge;
   const total = subtotal + actualDeliveryCharge;
@@ -167,12 +167,15 @@ const CartPage = () => {
               <p className="text-2xl font-bold text-amber-950">₹{total}</p>
             </div>
             
-            <a href="/checkout"
+            <button
+              type="button"
+              onClick={() => navigate('/checkout')}
               className="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg active:scale-95 transition-all duration-300 flex items-center gap-2"
             >
               <span>Checkout</span>
               <ArrowRight className="w-5 h-5" />
-            </a>
+            </button>
+
           </div>
           {actualDeliveryCharge === 0 && subtotal >= freeDeliveryThreshold && (
             <p className="text-xs text-green-600 font-semibold text-center flex items-center justify-center gap-1">
