@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronRight, Sparkles } from 'lucide-react';
+import breadImage from '../assets/bread-hero.jpg';
 
 const Hero = () => {
   return (
@@ -73,17 +74,30 @@ const Hero = () => {
             <div className="relative z-10">
               {/* Main Image Card */}
               <div className="bg-white rounded-3xl shadow-2xl p-6 transform hover:scale-105 transition-transform duration-500">
-                <div className="aspect-square rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 overflow-hidden">
-                  <div className="w-full h-full flex items-center justify-center">
-                    {/* Placeholder for bakery image */}
-                    <div className="text-center">
-                      <div className="w-64 h-64 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                        <span className="text-8xl">🥖</span>
+                <div className="aspect-square rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 overflow-hidden relative">
+                  <div className="w-full h-full flex items-center justify-center p-8">
+                    {/* Beautiful Bread Image with Gradient Overlay */}
+                    <div className="relative w-full h-full">
+                      <div className="absolute inset-0 bg-gradient-to-br from-amber-400/20 to-orange-500/20 rounded-full"></div>
+                      <div className="relative w-full h-full flex items-center justify-center">
+                        <div className="w-72 h-72 rounded-full overflow-hidden shadow-2xl ring-8 ring-white/50 transform hover:scale-105 transition-transform duration-500">
+                          <img 
+                            src={breadImage}
+                            alt="Fresh Artisan Bread"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
                       </div>
-                      <p className="text-amber-800 font-medium text-lg">
-                        Fresh Breads & Pastries
-                      </p>
+                      {/* Decorative elements */}
+                      <div className="absolute top-4 right-4 w-20 h-20 bg-amber-300/30 rounded-full blur-xl"></div>
+                      <div className="absolute bottom-8 left-8 w-16 h-16 bg-orange-300/30 rounded-full blur-xl"></div>
                     </div>
+                  </div>
+                  {/* Text below image */}
+                  <div className="absolute bottom-4 left-0 right-0 text-center">
+                    <p className="text-amber-900 font-bold text-xl bg-white/80 backdrop-blur-sm py-2 px-4 rounded-full inline-block shadow-lg">
+                      Fresh Breads & Pastries
+                    </p>
                   </div>
                 </div>
               </div>
