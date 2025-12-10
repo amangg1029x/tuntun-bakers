@@ -6,14 +6,13 @@ const OrderSuccessPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [showConfetti, setShowConfetti] = useState(true);
-  const [countdown, setCountdown] = useState(5);
   
   const order = location.state?.order;
 
   // Redirect if no order data
   useEffect(() => {
     if (!order) {
-      navigate('/');
+      navigate('/cart');
     }
   }, [order, navigate]);
 
@@ -24,16 +23,6 @@ const OrderSuccessPage = () => {
     }, 5000);
     return () => clearTimeout(timer);
   }, []);
-
-  // Auto redirect countdown
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown(countdown - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [countdown]);
 
   if (!order) return null;
 
@@ -94,7 +83,7 @@ const OrderSuccessPage = () => {
               <p className="text-gray-600 mb-2">Order ID</p>
               <div className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-100 to-orange-100 px-6 py-3 rounded-xl">
                 <Package className="w-5 h-5 text-amber-700" />
-                <span className="text-2xl font-bold text-amber-900">{order.orderId}</span>
+                <span className="text-2xl font-bold text-amber-900">{order.orderNumber || order._id?.slice(-8).toUpperCase()}</span>
               </div>
             </div>
 
@@ -132,25 +121,75 @@ const OrderSuccessPage = () => {
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6">
               <h3 className="font-bold text-amber-950 mb-4">Order Summary</h3>
               <div className="space-y-3 mb-4">
-                {order.items.map((item) => (
-                  <div key={item._id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{item.emoji}</span>
-                      <div>
-                        <p className="font-semibold text-amber-900 text-sm">{item.name}</p>
-                        <p className="text-xs text-amber-700">Qty: {item.quantity}</p>
+                {order.items && order.items.length > 0 ? (
+                  order.items.map((item) => (
+                    <div key={item._id} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{item.emoji || '🍞'}</span>
+                        <div>
+                          <p className="font-semibold text-amber-900 text-sm">{item.name}</p>
+                          <p className="text-xs text-amber-700">Qty: {item.quantity}</p>
+                        </div>
                       </div>
+                      <p className="font-bold text-amber-900">₹{(item.price * item.quantity).toFixed(2)}</p>
                     </div>
-                    <p className="font-bold text-amber-900">₹{item.price * item.quantity}</p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-amber-700 text-sm">Order items information unavailable</p>
+                )}
               </div>
-              <div className="border-t-2 border-amber-200 pt-4">
-                <div className="flex justify-between text-xl font-bold text-amber-950">
+              <div className="border-t-2 border-amber-200 pt-4 space-y-2">
+                <div className="flex justify-between text-amber-900">
+                  <span>Subtotal</span>
+                  <span>₹{order.subtotal?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div className="flex justify-between text-amber-900">
+                  <span>Delivery Charge</span>
+                  <span>{order.deliveryCharge === 0 ? 'FREE' : `₹${order.deliveryCharge?.toFixed(2)}`}</span>
+                </div>
+                <div className="flex justify-between text-xl font-bold text-amber-950 pt-2 border-t border-amber-200">
                   <span>Total Paid</span>
-                  <span>₹{order.total}</span>
+                  <span>₹{order.totalAmount?.toFixed(2) || '0.00'}</span>
                 </div>
               </div>
+            </div>
+
+            {/* Payment Status */}
+            <div className="bg-blue-50 rounded-2xl p-4 border-2 border-blue-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full ${
+                    order.paymentStatus === 'Paid' ? 'bg-green-500' : 'bg-amber-500'
+                  }`}></div>
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900">Payment Status</p>
+                    <p className="text-xs text-blue-700">{order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment'}</p>
+                  </div>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  order.paymentStatus === 'Paid' 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-amber-100 text-amber-700'
+                }`}>
+                  {order.paymentStatus || 'Pending'}
+                </span>
+              </div>
+            </div>
+
+            {/* Delivery Address */}
+            <div className="bg-gray-50 rounded-2xl p-4">
+              <h3 className="font-bold text-gray-900 mb-3 text-sm">Delivery Address</h3>
+              {order.deliveryAddress ? (
+                <div className="text-sm text-gray-700">
+                  <p className="font-semibold text-gray-900">{order.deliveryAddress.name}</p>
+                  <p>{order.deliveryAddress.address}</p>
+                  {order.deliveryAddress.landmark && <p>Landmark: {order.deliveryAddress.landmark}</p>}
+                  <p>{order.deliveryAddress.city} - {order.deliveryAddress.pincode}</p>
+                  <p className="font-semibold mt-2">{order.deliveryAddress.phone}</p>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">Address information unavailable</p>
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -183,16 +222,14 @@ const OrderSuccessPage = () => {
               </button>
             </div>
 
-            {/* Auto Redirect Notice */}
+            {/* Home Link */}
             <div className="text-center pt-6 border-t border-gray-200">
               <button
                 onClick={() => navigate('/')}
                 className="inline-flex items-center gap-2 text-gray-600 hover:text-amber-900 transition-colors group"
               >
                 <Home className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                <span className="text-sm">
-                  Redirecting to home in {countdown}s... Click to go now
-                </span>
+                <span className="text-sm">Return to Home</span>
               </button>
             </div>
           </div>
