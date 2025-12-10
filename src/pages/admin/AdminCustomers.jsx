@@ -46,6 +46,9 @@ const AdminCustomers = () => {
       const customersData = response.data?.customers || response.customers || response.data || [];
       const customersArray = Array.isArray(customersData) ? customersData : [];
       
+      console.log('Customers array:', customersArray);
+      console.log('Sample customer data:', customersArray[0]);
+      
       setCustomers(customersArray);
       setFilteredCustomers(customersArray);
       setTotalPages(response.data?.totalPages || response.totalPages || 1);
@@ -70,6 +73,22 @@ const AdminCustomers = () => {
       console.error('Failed to fetch customer details:', error);
       toast.error('Failed to load customer details');
     }
+  };
+
+  // Calculate total revenue from all customers
+  const calculateTotalRevenue = () => {
+    return safeCustomers.reduce((sum, customer) => {
+      const totalSpent = customer.stats?.totalSpent || customer.totalSpent || 0;
+      return sum + totalSpent;
+    }, 0);
+  };
+
+  // Calculate active customers (those who have placed orders)
+  const calculateActiveCustomers = () => {
+    return safeCustomers.filter(customer => {
+      const totalOrders = customer.stats?.totalOrders || customer.totalOrders || 0;
+      return totalOrders > 0;
+    }).length;
   };
 
   const CustomerDetailsModal = () => {
@@ -132,12 +151,12 @@ const AdminCustomers = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Total Spent</span>
-                    <span className="font-bold text-green-600">₹{customer.stats?.totalSpent?.toFixed(2) || '0.00'}</span>
+                    <span className="font-bold text-green-600">₹{(customer.stats?.totalSpent || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Avg Order Value</span>
                     <span className="font-bold text-gray-900">
-                      ₹{customer.stats?.totalOrders > 0 ? (customer.stats.totalSpent / customer.stats.totalOrders).toFixed(2) : '0.00'}
+                      ₹{customer.stats?.totalOrders > 0 ? ((customer.stats.totalSpent || 0) / customer.stats.totalOrders).toFixed(2) : '0.00'}
                     </span>
                   </div>
                 </div>
@@ -181,7 +200,7 @@ const AdminCustomers = () => {
                           <p className="text-xs text-gray-600">{new Date(order.createdAt).toLocaleString()}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-bold text-gray-900">₹{order.totalAmount?.toFixed(2)}</p>
+                          <p className="text-lg font-bold text-gray-900">₹{(order.totalAmount || 0).toFixed(2)}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                               order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
@@ -205,7 +224,7 @@ const AdminCustomers = () => {
                             <span className="text-gray-700">
                               {item.emoji || '🍰'} {item.name} × {item.quantity}
                             </span>
-                            <span className="text-gray-900 font-semibold">₹{(item.price * item.quantity).toFixed(2)}</span>
+                            <span className="text-gray-900 font-semibold">₹{((item.price || 0) * (item.quantity || 0)).toFixed(2)}</span>
                           </div>
                         ))}
                       </div>
@@ -267,7 +286,7 @@ const AdminCustomers = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">Active Customers</p>
-              <p className="text-2xl font-bold text-gray-900">{safeCustomers.filter(c => c.stats?.totalOrders > 0).length}</p>
+              <p className="text-2xl font-bold text-gray-900">{calculateActiveCustomers()}</p>
             </div>
           </div>
         </div>
@@ -279,7 +298,7 @@ const AdminCustomers = () => {
             <div>
               <p className="text-sm text-gray-600">Total Revenue</p>
               <p className="text-2xl font-bold text-gray-900">
-                ₹{safeCustomers.reduce((sum, c) => sum + (c.stats?.totalSpent || 0), 0).toFixed(2)}
+                ₹{calculateTotalRevenue().toFixed(2)}
               </p>
             </div>
           </div>
@@ -319,42 +338,47 @@ const AdminCustomers = () => {
             </thead>
             <tbody>
               {safeFilteredCustomers.length > 0 ? (
-                safeFilteredCustomers.map((customer) => (
-                  <tr key={customer._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold">
-                          {customer.name?.charAt(0).toUpperCase()}
+                safeFilteredCustomers.map((customer) => {
+                  const totalOrders = customer.stats?.totalOrders || customer.totalOrders || 0;
+                  const totalSpent = customer.stats?.totalSpent || customer.totalSpent || 0;
+                  
+                  return (
+                    <tr key={customer._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold">
+                            {customer.name?.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">{customer.name}</p>
+                            <p className="text-sm text-gray-600">{customer.email}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">{customer.name}</p>
-                          <p className="text-sm text-gray-600">{customer.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-sm text-gray-700">
-                      {customer.phone || 'Not provided'}
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-bold text-gray-900">{customer.stats?.totalOrders || 0}</span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-bold text-green-600">₹{customer.stats?.totalSpent?.toFixed(2) || '0.00'}</span>
-                    </td>
-                    <td className="py-4 px-6 text-sm text-gray-600">
-                      {new Date(customer.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="py-4 px-6">
-                      <button
-                        onClick={() => fetchCustomerDetails(customer._id)}
-                        className="flex items-center gap-2 text-amber-700 hover:text-amber-900 font-semibold transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-700">
+                        {customer.phone || 'Not provided'}
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="font-bold text-gray-900">{totalOrders}</span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="font-bold text-green-600">₹{totalSpent.toFixed(2)}</span>
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-600">
+                        {new Date(customer.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="py-4 px-6">
+                        <button
+                          onClick={() => fetchCustomerDetails(customer._id)}
+                          className="flex items-center gap-2 text-amber-700 hover:text-amber-900 font-semibold transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan="6" className="text-center py-12">
