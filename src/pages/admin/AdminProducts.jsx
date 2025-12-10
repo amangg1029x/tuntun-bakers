@@ -2,23 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import adminAPI from '../../services/adminAPI';
 import { productAPI } from '../../services/api';
+import ImageUpload from '../../components/admin/ImageUpload';
 import {
   Plus,
   Edit2,
   Trash2,
   Search,
   Package,
-  AlertCircle,
   X,
   Save,
   TrendingUp,
-  Star
+  Star,
+  Upload
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const AdminProducts = () => {
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,6 +34,7 @@ const AdminProducts = () => {
     price: '',
     category: 'Breads',
     emoji: '🍞',
+    image: { url: '', publicId: '' },
     stockQuantity: 100,
     rating: 4.5,
     reviews: 0,
@@ -57,11 +60,8 @@ const AdminProducts = () => {
     try {
       setLoading(true);
       const response = await productAPI.getAll();
-      console.log('Products API response:', response.data);
-      // The API returns { success: true, data: [...products] }
       const productsData = response.data?.data || response.data || [];
       const productsArray = Array.isArray(productsData) ? productsData : [];
-      console.log('Products array:', productsArray);
       setProducts(productsArray);
       setFilteredProducts(productsArray);
     } catch (error) {
@@ -111,6 +111,7 @@ const AdminProducts = () => {
         price: product.price,
         category: product.category,
         emoji: product.emoji,
+        image: product.image || { url: '', publicId: '' },
         stockQuantity: product.stockQuantity,
         rating: product.rating,
         reviews: product.reviews,
@@ -128,6 +129,7 @@ const AdminProducts = () => {
         price: '',
         category: 'Breads',
         emoji: '🍞',
+        image: { url: '', publicId: '' },
         stockQuantity: 100,
         rating: 4.5,
         reviews: 0,
@@ -139,6 +141,43 @@ const AdminProducts = () => {
       });
     }
     setShowProductModal(true);
+  };
+
+  const handleImageChange = async (base64Image) => {
+    try {
+      setUploadingImage(true);
+      const token = await getToken();
+      const result = await adminAPI.uploadImage(token, base64Image);
+      
+      setFormData(prev => ({
+        ...prev,
+        image: {
+          url: result.data.url,
+          publicId: result.data.publicId
+        }
+      }));
+      toast.success('Image uploaded successfully!');
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleImageRemove = async () => {
+    if (formData.image.publicId) {
+      try {
+        const token = await getToken();
+        await adminAPI.deleteImage(token, formData.image.publicId);
+      } catch (error) {
+        console.error('Image delete failed:', error);
+      }
+    }
+    setFormData(prev => ({
+      ...prev,
+      image: { url: '', publicId: '' }
+    }));
   };
 
   const handleSaveProduct = async () => {
@@ -175,22 +214,10 @@ const AdminProducts = () => {
     }
   };
 
-  const handleUpdateStock = async (productId, stockData) => {
-    try {
-      const token = await getToken();
-      await adminAPI.updateProductStock(token, productId, stockData);
-      toast.success('Stock updated successfully!');
-      fetchProducts();
-    } catch (error) {
-      console.error('Failed to update stock:', error);
-      toast.error('Failed to update stock');
-    }
-  };
-
   const ProductModal = () => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowProductModal(false)}>
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="sticky top-0 bg-gradient-to-r from-amber-600 to-amber-700 text-white p-6 rounded-t-2xl">
+      <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 bg-gradient-to-r from-amber-600 to-amber-700 text-white p-6 rounded-t-2xl z-10">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">{editingProduct ? 'Edit Product' : 'Add New Product'}</h2>
             <button onClick={() => setShowProductModal(false)} className="p-2 hover:bg-amber-800 rounded-lg">
@@ -200,6 +227,13 @@ const AdminProducts = () => {
         </div>
 
         <div className="p-6 space-y-4">
+          {/* Image Upload */}
+          <ImageUpload
+            currentImage={formData.image.url}
+            onImageChange={handleImageChange}
+            onImageRemove={handleImageRemove}
+          />
+
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="block text-sm font-semibold text-gray-700 mb-2">Product Name *</label>
@@ -247,12 +281,13 @@ const AdminProducts = () => {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Emoji</label>
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Emoji (Fallback)</label>
               <div className="flex gap-2 flex-wrap mb-2">
                 {commonEmojis.map(emoji => (
                   <button
                     key={emoji}
+                    type="button"
                     onClick={() => setFormData({ ...formData, emoji })}
                     className={`text-2xl p-2 rounded-lg hover:bg-gray-100 ${
                       formData.emoji === emoji ? 'bg-amber-100 ring-2 ring-amber-500' : ''
@@ -262,13 +297,6 @@ const AdminProducts = () => {
                   </button>
                 ))}
               </div>
-              <input
-                type="text"
-                value={formData.emoji}
-                onChange={(e) => setFormData({ ...formData, emoji: e.target.value })}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
-                placeholder="Or enter custom emoji"
-              />
             </div>
 
             <div>
@@ -301,6 +329,16 @@ const AdminProducts = () => {
                 max="5"
                 value={formData.rating}
                 onChange={(e) => setFormData({ ...formData, rating: Number(e.target.value) })}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Reviews</label>
+              <input
+                type="number"
+                value={formData.reviews}
+                onChange={(e) => setFormData({ ...formData, reviews: Number(e.target.value) })}
                 className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-amber-500 focus:outline-none"
               />
             </div>
@@ -356,10 +394,11 @@ const AdminProducts = () => {
             </button>
             <button
               onClick={handleSaveProduct}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-lg font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+              disabled={uploadingImage}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-lg font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-5 h-5" />
-              {editingProduct ? 'Update Product' : 'Create Product'}
+              {uploadingImage ? 'Uploading...' : editingProduct ? 'Update Product' : 'Create Product'}
             </button>
           </div>
         </div>
@@ -378,7 +417,6 @@ const AdminProducts = () => {
     );
   }
 
-  // Ensure products is always an array for rendering
   const safeProducts = Array.isArray(products) ? products : [];
   const safeFilteredProducts = Array.isArray(filteredProducts) ? filteredProducts : [];
 
@@ -459,8 +497,16 @@ const AdminProducts = () => {
         {safeFilteredProducts.length > 0 ? (
           safeFilteredProducts.map((product) => (
             <div key={product._id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-              <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 h-48 flex items-center justify-center">
-                <div className="text-7xl">{product.emoji}</div>
+              <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 h-48 flex items-center justify-center overflow-hidden">
+                {product.image?.url ? (
+                  <img
+                    src={product.image.url}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="text-7xl">{product.emoji}</div>
+                )}
                 {product.isNew && (
                   <span className="absolute top-3 left-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                     <Star className="w-3 h-3" /> New
