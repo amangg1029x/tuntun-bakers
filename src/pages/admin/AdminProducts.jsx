@@ -57,17 +57,25 @@ const AdminProducts = () => {
     try {
       setLoading(true);
       const response = await productAPI.getAll();
-      setProducts(response.data);
-      setFilteredProducts(response.data);
+      const productsData = Array.isArray(response.data) ? response.data : [];
+      setProducts(productsData);
+      setFilteredProducts(productsData);
     } catch (error) {
       console.error('Failed to fetch products:', error);
       toast.error('Failed to load products');
+      setProducts([]);
+      setFilteredProducts([]);
     } finally {
       setLoading(false);
     }
   };
 
   const filterProducts = () => {
+    if (!Array.isArray(products)) {
+      setFilteredProducts([]);
+      return;
+    }
+
     let filtered = [...products];
 
     if (searchTerm) {
@@ -366,6 +374,10 @@ const AdminProducts = () => {
     );
   }
 
+  // Ensure products is always an array for rendering
+  const safeProducts = Array.isArray(products) ? products : [];
+  const safeFilteredProducts = Array.isArray(filteredProducts) ? filteredProducts : [];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -387,19 +399,19 @@ const AdminProducts = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl p-4 shadow-lg">
           <p className="text-sm text-gray-600 mb-1">Total Products</p>
-          <p className="text-2xl font-bold text-gray-900">{products.length}</p>
+          <p className="text-2xl font-bold text-gray-900">{safeProducts.length}</p>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-lg">
           <p className="text-sm text-gray-600 mb-1">In Stock</p>
-          <p className="text-2xl font-bold text-green-600">{products.filter(p => p.inStock).length}</p>
+          <p className="text-2xl font-bold text-green-600">{safeProducts.filter(p => p.inStock).length}</p>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-lg">
           <p className="text-sm text-gray-600 mb-1">Low Stock</p>
-          <p className="text-2xl font-bold text-orange-600">{products.filter(p => p.stockQuantity <= 5 && p.stockQuantity > 0).length}</p>
+          <p className="text-2xl font-bold text-orange-600">{safeProducts.filter(p => p.stockQuantity <= 5 && p.stockQuantity > 0).length}</p>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-lg">
           <p className="text-sm text-gray-600 mb-1">Out of Stock</p>
-          <p className="text-2xl font-bold text-red-600">{products.filter(p => !p.inStock || p.stockQuantity === 0).length}</p>
+          <p className="text-2xl font-bold text-red-600">{safeProducts.filter(p => !p.inStock || p.stockQuantity === 0).length}</p>
         </div>
       </div>
 
@@ -440,8 +452,8 @@ const AdminProducts = () => {
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.length > 0 ? (
-          filteredProducts.map((product) => (
+        {safeFilteredProducts.length > 0 ? (
+          safeFilteredProducts.map((product) => (
             <div key={product._id} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
               <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 h-48 flex items-center justify-center">
                 <div className="text-7xl">{product.emoji}</div>
