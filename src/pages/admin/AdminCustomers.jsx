@@ -40,12 +40,20 @@ const AdminCustomers = () => {
         limit: 20,
         search: searchTerm
       });
-      setCustomers(response.data || []);
-      setFilteredCustomers(response.data || []);
-      setTotalPages(response.pages || 1);
+      console.log('Customers API response:', response);
+      
+      // Handle different response formats
+      const customersData = response.data?.customers || response.customers || response.data || [];
+      const customersArray = Array.isArray(customersData) ? customersData : [];
+      
+      setCustomers(customersArray);
+      setFilteredCustomers(customersArray);
+      setTotalPages(response.data?.totalPages || response.totalPages || 1);
     } catch (error) {
       console.error('Failed to fetch customers:', error);
       toast.error('Failed to load customers');
+      setCustomers([]);
+      setFilteredCustomers([]);
     } finally {
       setLoading(false);
     }
@@ -55,7 +63,8 @@ const AdminCustomers = () => {
     try {
       const token = await getToken();
       const response = await adminAPI.getCustomerDetails(token, customerId);
-      setCustomerDetails(response.data);
+      console.log('Customer details response:', response);
+      setCustomerDetails(response.data || response);
       setShowCustomerModal(true);
     } catch (error) {
       console.error('Failed to fetch customer details:', error);
@@ -227,6 +236,9 @@ const AdminCustomers = () => {
     );
   }
 
+  const safeCustomers = Array.isArray(customers) ? customers : [];
+  const safeFilteredCustomers = Array.isArray(filteredCustomers) ? filteredCustomers : [];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -244,7 +256,7 @@ const AdminCustomers = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Customers</p>
-              <p className="text-2xl font-bold text-gray-900">{customers.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{safeCustomers.length}</p>
             </div>
           </div>
         </div>
@@ -255,7 +267,7 @@ const AdminCustomers = () => {
             </div>
             <div>
               <p className="text-sm text-gray-600">Active Customers</p>
-              <p className="text-2xl font-bold text-gray-900">{customers.filter(c => c.stats?.totalOrders > 0).length}</p>
+              <p className="text-2xl font-bold text-gray-900">{safeCustomers.filter(c => c.stats?.totalOrders > 0).length}</p>
             </div>
           </div>
         </div>
@@ -267,7 +279,7 @@ const AdminCustomers = () => {
             <div>
               <p className="text-sm text-gray-600">Total Revenue</p>
               <p className="text-2xl font-bold text-gray-900">
-                ₹{customers.reduce((sum, c) => sum + (c.stats?.totalSpent || 0), 0).toFixed(2)}
+                ₹{safeCustomers.reduce((sum, c) => sum + (c.stats?.totalSpent || 0), 0).toFixed(2)}
               </p>
             </div>
           </div>
@@ -306,8 +318,8 @@ const AdminCustomers = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredCustomers.length > 0 ? (
-                filteredCustomers.map((customer) => (
+              {safeFilteredCustomers.length > 0 ? (
+                safeFilteredCustomers.map((customer) => (
                   <tr key={customer._id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
