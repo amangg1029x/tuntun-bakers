@@ -57,9 +57,13 @@ const AdminProducts = () => {
     try {
       setLoading(true);
       const response = await productAPI.getAll();
-      const productsData = Array.isArray(response.data) ? response.data : [];
-      setProducts(productsData);
-      setFilteredProducts(productsData);
+      console.log('Products API response:', response.data);
+      // The API returns { success: true, data: [...products] }
+      const productsData = response.data?.data || response.data || [];
+      const productsArray = Array.isArray(productsData) ? productsData : [];
+      console.log('Products array:', productsArray);
+      setProducts(productsArray);
+      setFilteredProducts(productsArray);
     } catch (error) {
       console.error('Failed to fetch products:', error);
       toast.error('Failed to load products');
