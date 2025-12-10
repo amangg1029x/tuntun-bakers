@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Heart, Star, Search, SlidersHorizontal, X, ChevronDown, Plus, Minus, Sparkles, TrendingUp, Clock, Award } from 'lucide-react';
+import { ShoppingCart, Heart, Star, Search, SlidersHorizontal, X, ChevronDown, Plus, Minus, Sparkles, TrendingUp, Clock, Award, AlertCircle } from 'lucide-react';
 
 const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
 
+  // Check if product is out of stock
+  const isOutOfStock = !product.inStock || product.stockQuantity === 0;
+  const isLowStock = product.inStock && product.stockQuantity > 0 && product.stockQuantity <= 5;
+
   const handleAddToCart = async () => {
+    if (isOutOfStock) return;
+    
     setIsAdding(true);
     try {
       console.log('Product:', product); // Debug log
@@ -31,21 +37,41 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
 
   return (
     <div
-      className="group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+      className={`group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 ${
+        isOutOfStock ? 'opacity-75' : ''
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      {/* Out of Stock Overlay */}
+      {isOutOfStock && (
+        <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm z-30 flex items-center justify-center">
+          <div className="bg-white rounded-2xl px-6 py-4 shadow-2xl transform rotate-[-5deg]">
+            <div className="flex items-center gap-2 text-red-600">
+              <AlertCircle className="w-6 h-6" />
+              <span className="text-xl font-bold">Out of Stock</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Badges */}
       <div className="absolute top-3 left-3 z-20 flex flex-col gap-2">
-        {product.isNew && (
+        {product.isNew && !isOutOfStock && (
           <span className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
             <Star className="w-3 h-3" />
             New
           </span>
         )}
-        {product.isTrending && (
+        {product.isTrending && !isOutOfStock && (
           <span className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
             🔥 Trending
+          </span>
+        )}
+        {isLowStock && !isOutOfStock && (
+          <span className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            Only {product.stockQuantity} left!
           </span>
         )}
       </div>
@@ -64,12 +90,18 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
 
       {/* Product Image */}
       <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 aspect-square flex items-center justify-center overflow-hidden">
-        <div className={`text-8xl transition-all duration-500 ${isHovered ? 'scale-125 rotate-12' : 'scale-100'}`}>
+        <div className={`text-8xl transition-all duration-500 ${
+          isHovered && !isOutOfStock ? 'scale-125 rotate-12' : 'scale-100'
+        } ${
+          isOutOfStock ? 'grayscale' : ''
+        }`}>
           {product.emoji}
         </div>
         
         {/* Overlay on hover */}
-        <div className={`absolute inset-0 bg-gradient-to-t from-amber-900/80 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`absolute inset-0 bg-gradient-to-t from-amber-900/80 to-transparent transition-opacity duration-300 ${
+          isHovered && !isOutOfStock ? 'opacity-100' : 'opacity-0'
+        }`}>
           <div className="absolute bottom-4 left-4 right-4 text-white">
             <div className="flex items-center gap-2 text-sm mb-2">
               <span>⏱️ {product.prepTime}</span>
@@ -101,13 +133,34 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
         
         <div className="text-xs text-amber-600 mb-4">⭐ {product.reviews} reviews</div>
 
+        {/* Stock Status */}
+        {!isOutOfStock && (
+          <div className="text-xs mb-3">
+            {isLowStock ? (
+              <span className="text-orange-600 font-semibold flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                Hurry! Only {product.stockQuantity} left in stock
+              </span>
+            ) : (
+              <span className="text-green-600 font-semibold">✓ In Stock ({product.stockQuantity} available)</span>
+            )}
+          </div>
+        )}
+
         {/* Price and Actions */}
         <div className="flex items-center justify-between">
           <div className="text-2xl font-bold text-amber-900">
             ₹{product.price}
           </div>
           
-          {isHovered ? (
+          {isOutOfStock ? (
+            <button
+              disabled
+              className="bg-gray-400 text-white px-4 py-2 rounded-lg cursor-not-allowed flex items-center gap-2 opacity-60"
+            >
+              <span className="text-sm font-medium">Unavailable</span>
+            </button>
+          ) : isHovered ? (
             <div className="flex items-center gap-2 animate-fadeIn">
               <div className="flex items-center bg-amber-100 rounded-lg">
                 <button
@@ -119,7 +172,7 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
                 </button>
                 <span className="px-3 text-sm font-bold text-amber-900">{quantity}</span>
                 <button
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={() => setQuantity(Math.min(product.stockQuantity, quantity + 1))}
                   className="p-1 hover:bg-amber-200 rounded-r-lg transition-colors"
                   disabled={isAdding}
                 >
