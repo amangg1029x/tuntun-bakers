@@ -17,8 +17,8 @@ const ImageUpload = ({ currentImage, onImageChange, onImageRemove }) => {
     }
 
     // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
+    if (file.size > 50 * 1024) {
+      toast.error('Image size should be less than 50KB');
       return;
     }
 
@@ -83,7 +83,7 @@ const ImageUpload = ({ currentImage, onImageChange, onImageRemove }) => {
                 <Upload className="w-8 h-8 text-gray-400" />
               </div>
               <p className="text-sm font-semibold text-gray-700 mb-1">Click to upload image</p>
-              <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 5MB</p>
+              <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 50KB</p>
             </div>
           )}
         </label>
