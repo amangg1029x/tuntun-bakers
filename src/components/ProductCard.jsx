@@ -90,13 +90,25 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
 
       {/* Product Image */}
       <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 aspect-square flex items-center justify-center overflow-hidden">
-        <div className={`text-8xl transition-all duration-500 ${
-          isHovered && !isOutOfStock ? 'scale-125 rotate-12' : 'scale-100'
-        } ${
-          isOutOfStock ? 'grayscale' : ''
-        }`}>
-          {product.emoji}
-        </div>
+        {product.image?.url ? (
+          <img
+            src={product.image.url}
+            alt={product.name}
+            className={`w-full h-full object-cover transition-all duration-500 ${
+              isHovered && !isOutOfStock ? 'scale-110' : 'scale-100'
+            } ${
+              isOutOfStock ? 'grayscale' : ''
+            }`}
+          />
+        ) : (
+          <div className={`text-8xl transition-all duration-500 ${
+            isHovered && !isOutOfStock ? 'scale-125 rotate-12' : 'scale-100'
+          } ${
+            isOutOfStock ? 'grayscale' : ''
+          }`}>
+            {product.emoji}
+          </div>
+        )}
         
         {/* Overlay on hover */}
         <div className={`absolute inset-0 bg-gradient-to-t from-amber-900/80 to-transparent transition-opacity duration-300 ${
