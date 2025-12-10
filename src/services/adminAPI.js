@@ -27,6 +27,24 @@ const adminAPI = {
     return response.data;
   },
 
+  // Image Upload
+  uploadImage: async (token, imageData) => {
+    const response = await axios.post(
+      `${API_URL}/admin/upload`,
+      { image: imageData },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+
+  deleteImage: async (token, publicId) => {
+    const response = await axios.delete(
+      `${API_URL}/admin/upload/${publicId.replace(/\//g, '_')}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+
   // Products
   createProduct: async (token, productData) => {
     const response = await axios.post(`${API_URL}/admin/products`, productData, {
