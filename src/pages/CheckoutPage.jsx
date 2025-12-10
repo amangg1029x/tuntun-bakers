@@ -108,54 +108,97 @@ const CheckoutPage = () => {
     }
   };
 
-  const handlePlaceOrder = async () => {
-    if (!selectedAddress || !selectedPayment) {
-      alert('Please select delivery address and payment method');
-      return;
-    }
+  // Fixed handlePlaceOrder function for CheckoutPage.jsx
+// Replace the existing handlePlaceOrder function (around line 244)
 
-    setIsProcessing(true);
+const handlePlaceOrder = async () => {
+  if (!selectedAddress || !selectedPayment) {
+    alert('Please select delivery address and payment method');
+    return;
+  }
 
-    
-    
-    try {
-      // Create order in database first
-      const orderData = {
-        items: cart.map(item => ({
-          product: item.product._id,
-          quantity: item.quantity
-        })),
-        deliveryAddress: {
-          name: selectedAddress.name,
-          phone: selectedAddress.phone,
-          address: selectedAddress.address,
-          landmark: selectedAddress.landmark || '',
-          city: selectedAddress.city,
-          pincode: selectedAddress.pincode
-        },
-        paymentMethod: selectedPayment.id,
-        subtotal,
-        deliveryCharge: actualDeliveryCharge,
-        totalAmount: total,
-        notes: ''
-      };
+  setIsProcessing(true);
+
+  try {
+    // Prepare order data
+    const orderData = {
+      items: cart.map(item => ({
+        product: item.product._id,
+        quantity: item.quantity
+      })),
+      deliveryAddress: {
+        name: selectedAddress.name,
+        phone: selectedAddress.phone,
+        address: selectedAddress.address,
+        landmark: selectedAddress.landmark || '',
+        city: selectedAddress.city,
+        pincode: selectedAddress.pincode
+      },
+      paymentMethod: selectedPayment.id,
+      subtotal,
+      deliveryCharge: actualDeliveryCharge,
+      totalAmount: total,
+      notes: ''
+    };
+
+    // ============================================
+    // PAYMENT METHOD: CASH ON DELIVERY (COD)
+    // ============================================
+    if (selectedPayment.id === 'cod') {
+      console.log('Processing COD order...');
       
-      console.log('Creating order:', orderData);
+      // For COD: Create order immediately
       const response = await orderAPI.create(orderData);
       const createdOrder = response.data.data;
-      console.log('Order created:', createdOrder);
+      console.log('COD Order created:', createdOrder);
 
-      // If payment method is Razorpay, initiate payment
-      if (selectedPayment.id === 'razorpay') {
-        if (!razorpayLoaded) {
-          throw new Error('Payment gateway not loaded. Please refresh and try again.');
-        }
+      // Clear cart
+      await clearCart();
 
-        initializePayment({
-          amount: total,
-          orderId: createdOrder._id,
-          onSuccess: async (paymentDetails) => {
-            console.log('Payment successful:', paymentDetails);
+      // Navigate to success page
+      navigate('/order-success', { 
+        state: { 
+          order: createdOrder
+        } 
+      });
+      
+      return; // Exit function here for COD
+    }
+
+    // ============================================
+    // PAYMENT METHOD: RAZORPAY (ONLINE PAYMENT)
+    // ============================================
+    if (selectedPayment.id === 'razorpay') {
+      console.log('Processing Razorpay payment...');
+
+      // Check if Razorpay SDK is loaded
+      if (!razorpayLoaded) {
+        throw new Error('Payment gateway not loaded. Please refresh and try again.');
+      }
+
+      // For Razorpay: DO NOT create order yet
+      // First initiate payment, create order only after success
+      
+      initializePayment({
+        amount: total,
+        //orderId: `TEMP_${Date.now()}`, // Temporary ID for Razorpay order creation
+        onSuccess: async (paymentDetails) => {
+          console.log('✅ Payment successful:', paymentDetails);
+          
+          try {
+            // NOW create the order in database with payment details
+            const orderDataWithPayment = {
+              ...orderData,
+              paymentStatus: 'Paid', // Mark as paid
+              razorpayOrderId: paymentDetails.razorpayOrderId,
+              razorpayPaymentId: paymentDetails.razorpayPaymentId,
+              razorpaySignature: paymentDetails.razorpaySignature
+            };
+
+            console.log('Creating order after successful payment...');
+            const response = await orderAPI.create(orderDataWithPayment);
+            const createdOrder = response.data.data;
+            console.log('Order created:', createdOrder);
             
             // Clear cart
             await clearCart();
@@ -167,35 +210,48 @@ const CheckoutPage = () => {
                 paymentDetails
               } 
             });
-          },
-          onFailure: (error) => {
-            console.error('Payment failed:', error);
+          } catch (orderError) {
+            console.error('❌ Failed to create order after payment:', orderError);
+            
+            // Payment succeeded but order creation failed
+            // This is a critical error - payment was taken but no order
+            alert('Payment successful but order creation failed. Please contact support with payment ID: ' + paymentDetails.razorpayPaymentId);
+            
+            // You might want to log this to your error tracking service
             setIsProcessing(false);
-
-            // Message dikhana
-            toast.error(
-              error?.error?.description || 'Payment failed. Please try again.'
-            );
-
-            // Cart page par bhejna
-            navigate('/cart');
           }
-        });
-      } else {
-        // COD - directly proceed
-        await clearCart();
-        navigate('/order-success', { 
-          state: { 
-            order: createdOrder
-          } 
-        });
-      }
-    } catch (error) {
-      console.error('Order creation failed:', error);
-      alert(error.response?.data?.message || 'Failed to place order. Please try again.');
-      setIsProcessing(false);
+        },
+        
+        onFailure: (error) => {
+          console.error('❌ Payment failed:', error);
+          setIsProcessing(false);
+
+          // Show error message
+          toast.error(
+            error?.error?.description || 'Payment failed. Please try again.'
+          );
+
+          // Stay on checkout page - DO NOT create order
+          // User can try payment again
+        }
+      });
+      
+      // Note: Don't set isProcessing to false here
+      // It will be handled in success/failure callbacks
+      return;
     }
-  };
+
+    // ============================================
+    // UNKNOWN PAYMENT METHOD
+    // ============================================
+    throw new Error('Invalid payment method selected');
+
+  } catch (error) {
+    console.error('❌ Order placement failed:', error);
+    alert(error.response?.data?.message || error.message || 'Failed to place order. Please try again.');
+    setIsProcessing(false);
+  }
+};
 
   const canProceed = () => {
     if (currentStep === 1) return selectedAddress !== null;

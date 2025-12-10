@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '../context/AppContext';
 
-/**
- * Custom hook to handle Razorpay payments
- */
 export const useRazorpay = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const { user } = useUser();
@@ -29,14 +26,6 @@ export const useRazorpay = () => {
     loadRazorpayScript();
   }, []);
 
-  /**
-   * Initialize Razorpay payment
-   * @param {Object} options - Payment options
-   * @param {number} options.amount - Amount in INR
-   * @param {string} options.orderId - Your order ID from backend
-   * @param {Function} options.onSuccess - Success callback
-   * @param {Function} options.onFailure - Failure callback
-   */
   const initializePayment = async ({
     amount,
     orderId,
@@ -50,6 +39,15 @@ export const useRazorpay = () => {
     }
 
     try {
+      // Get the token
+      const token = localStorage.getItem('clerk-token');
+      if (!token) {
+        throw new Error('Authentication required. Please login again.');
+      }
+
+      console.log('🔄 Creating Razorpay order on backend...');
+      console.log('API URL:', import.meta.env.VITE_API_URL);
+
       // Create Razorpay order on backend
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/payment/create-order`,
@@ -57,7 +55,7 @@ export const useRazorpay = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('clerk-token')}`
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
             amount,
@@ -67,7 +65,16 @@ export const useRazorpay = () => {
         }
       );
 
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Create order failed:', errorData);
+        throw new Error(errorData.message || 'Failed to create payment order');
+      }
+
       const data = await response.json();
+      console.log('✅ Razorpay order created:', data);
 
       if (!data.success) {
         throw new Error(data.message || 'Failed to create payment order');
@@ -82,7 +89,7 @@ export const useRazorpay = () => {
         currency: 'INR',
         name: 'TunTun Bakers',
         description: `Order #${orderId}`,
-        image: '/logo.png', // Add your logo
+        image: '/logo.png',
         order_id: razorpayOrderId,
         prefill: {
           name: user?.name || '',
@@ -93,15 +100,20 @@ export const useRazorpay = () => {
           color: '#D97706' // Amber-600
         },
         handler: async function (response) {
+          console.log('🔄 Payment successful, verifying...');
+          console.log('Payment response:', response);
+
           // Payment successful - verify on backend
           try {
+            const token = localStorage.getItem('clerk-token');
+            
             const verifyResponse = await fetch(
               `${import.meta.env.VITE_API_URL}/payment/verify`,
               {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  Authorization: `Bearer ${localStorage.getItem('clerk-token')}`
+                  'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                   razorpay_order_id: response.razorpay_order_id,
@@ -112,7 +124,16 @@ export const useRazorpay = () => {
               }
             );
 
+            console.log('Verify response status:', verifyResponse.status);
+
+            if (!verifyResponse.ok) {
+              const errorData = await verifyResponse.json();
+              console.error('Verification failed:', errorData);
+              throw new Error('Payment verification failed');
+            }
+
             const verifyData = await verifyResponse.json();
+            console.log('✅ Payment verified:', verifyData);
 
             if (verifyData.success) {
               onSuccess?.({
@@ -124,7 +145,7 @@ export const useRazorpay = () => {
               throw new Error('Payment verification failed');
             }
           } catch (error) {
-            console.error('Payment verification error:', error);
+            console.error('❌ Payment verification error:', error);
             onFailure?.({ error: error.message });
           }
         },
@@ -136,21 +157,25 @@ export const useRazorpay = () => {
         }
       };
 
+      console.log('🔄 Opening Razorpay checkout...');
+
       // Open Razorpay checkout
       const razorpay = new window.Razorpay(options);
       
       razorpay.on('payment.failed', async function (response) {
-        console.error('Payment failed:', response.error);
+        console.error('❌ Payment failed:', response.error);
         
         // Record failure on backend
         try {
+          const token = localStorage.getItem('clerk-token');
+          
           await fetch(
             `${import.meta.env.VITE_API_URL}/payment/failure`,
             {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                Authorization: `Bearer ${localStorage.getItem('clerk-token')}`
+                'Authorization': `Bearer ${token}`
               },
               body: JSON.stringify({
                 orderId,
@@ -167,7 +192,7 @@ export const useRazorpay = () => {
 
       razorpay.open();
     } catch (error) {
-      console.error('Payment initialization error:', error);
+      console.error('❌ Payment initialization error:', error);
       onFailure?.({ error: error.message });
     }
   };
