@@ -65,6 +65,7 @@ export const authAPI = {
 // ========================================
 export const userAPI = {
   getProfile: () => api.get('/user/profile'),
+  getUserStats: () => api.get('/user/stats'),
   updateProfile: (data) => api.put('/user/profile', data),
   
   // Addresses
