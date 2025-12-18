@@ -121,12 +121,29 @@ const Header = () => {
           </div>
 
           {/* Mobile Menu Button */}
+          <div className="flex">
+            <SignedIn>
+            {/* Clerk User Button with custom appearance */}
+            <div className="md:hidden p-2 mt-1">
+              <UserButton 
+                appearance={{
+                  elements: {
+                    avatarBox: 'w-10 h-10',
+                    userButtonPopoverCard: 'shadow-2xl',
+                    userButtonPopoverActionButton: 'hover:bg-amber-50'
+                  }
+                }}
+                afterSignOutUrl="/"
+              />
+              </div>
+          </SignedIn>
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="lg:hidden p-2 text-amber-900 hover:bg-amber-100 rounded-lg transition-colors"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
