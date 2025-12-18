@@ -27,7 +27,9 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
     }
   };
 
-  const handleToggleFavorite = async () => {
+  const handleToggleFavorite = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     try {
       await onToggleFavorite(product._id);
     } catch (error) {
@@ -45,7 +47,7 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
     >
       {/* Out of Stock Overlay */}
       {isOutOfStock && (
-        <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm z-30 flex items-center justify-center">
+        <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm z-30 flex items-center justify-center pointer-events-none">
           <div className="bg-white rounded-2xl px-6 py-4 shadow-2xl transform rotate-[-5deg]">
             <div className="flex items-center gap-2 text-red-600">
               <AlertCircle className="w-6 h-6" />
@@ -76,10 +78,11 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
         )}
       </div>
 
-      {/* Favorite Button */}
+      {/* Favorite Button - Fixed for mobile */}
       <button
         onClick={handleToggleFavorite}
-        className="absolute top-3 right-3 z-20 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg hover:scale-110 transition-transform duration-300"
+        className="absolute top-3 right-3 z-40 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-transform duration-300 touch-manipulation"
+        aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
       >
         <Heart
           className={`w-5 h-5 ${
