@@ -13,13 +13,21 @@ const FeaturedProducts = () => {
     const fetchFeaturedProducts = async () => {
       try {
         const response = await productAPI.getAll({ limit: 4 });
-        // Get featured products based on tags/ratings
-        const featured = response.data.data
-          .filter(p => p.isTrending || p.isNew)
-          .slice(0, 4);
-        setProducts(featured);
+        const productsData = response?.data?.data;
+        
+        if (Array.isArray(productsData)) {
+          // Get featured products based on tags/ratings
+          const featured = productsData
+            .filter(p => p.isTrending || p.isNew)
+            .slice(0, 4);
+          setProducts(featured);
+        } else {
+          console.error('Invalid products data received');
+          setProducts([]);
+        }
       } catch (error) {
         console.error('Failed to load featured products:', error);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -47,7 +55,7 @@ const FeaturedProducts = () => {
           <div className="text-center py-12">
             <div className="w-12 h-12 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
           </div>
-        ) : (
+        ) : products.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {products.map((product) => (
               <ProductCard
@@ -59,10 +67,13 @@ const FeaturedProducts = () => {
               />
             ))}
           </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-amber-800 text-lg">No featured products available at the moment.</p>
+          </div>
         )}
 
         <div className="text-center mt-12">
-          
           <a href="/products"
             className="inline-block bg-white text-amber-900 px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border-2 border-amber-300 hover:border-amber-500"
           >

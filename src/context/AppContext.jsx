@@ -75,16 +75,22 @@ export const AppProvider = ({ children }) => {
         try {
           // Fetch user from backend (will create if doesn't exist)
           const response = await authAPI.getMe();
-          setUser(response.data.data);
-          console.log('✅ User synced:', response.data.data.name);
+          const userData = response?.data?.data;
           
-          // Load cart and favorites ONLY after user is synced
-          console.log('📦 Loading cart and favorites...');
-          await Promise.all([
-            loadCart(),
-            loadFavorites()
-          ]);
-          console.log('✅ Cart and favorites loaded');
+          if (userData) {
+            setUser(userData);
+            console.log('✅ User synced:', userData.name || 'Unknown');
+            
+            // Load cart and favorites ONLY after user is synced
+            console.log('📦 Loading cart and favorites...');
+            await Promise.all([
+              loadCart(),
+              loadFavorites()
+            ]);
+            console.log('✅ Cart and favorites loaded');
+          } else {
+            console.error('❌ Invalid user data received');
+          }
         } catch (error) {
           console.error('❌ User sync failed:', error);
           
@@ -99,9 +105,12 @@ export const AppProvider = ({ children }) => {
                 
                 // Retry sync
                 const response = await authAPI.getMe();
-                setUser(response.data.data);
-                await Promise.all([loadCart(), loadFavorites()]);
-                console.log('✅ Retry successful');
+                const userData = response?.data?.data;
+                if (userData) {
+                  setUser(userData);
+                  await Promise.all([loadCart(), loadFavorites()]);
+                  console.log('✅ Retry successful');
+                }
               }
             } catch (retryError) {
               console.error('❌ Token refresh failed:', retryError);
