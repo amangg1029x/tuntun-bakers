@@ -30,6 +30,7 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
   const handleToggleFavorite = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log('Favorite clicked for:', product._id); // Debug log
     try {
       await onToggleFavorite(product._id);
     } catch (error) {
@@ -39,26 +40,15 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
 
   return (
     <div
-      className={`group relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 ${
+      className={`group relative bg-white rounded-2xl overflow-visible shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 ${
         isOutOfStock ? 'opacity-75' : ''
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      style={{ isolation: 'isolate' }}
     >
-      {/* Out of Stock Overlay */}
-      {isOutOfStock && (
-        <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm z-30 flex items-center justify-center pointer-events-none">
-          <div className="bg-white rounded-2xl px-6 py-4 shadow-2xl transform rotate-[-5deg]">
-            <div className="flex items-center gap-2 text-red-600">
-              <AlertCircle className="w-6 h-6" />
-              <span className="text-xl font-bold">Out of Stock</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Badges */}
-      <div className="absolute top-3 left-3 z-20 flex flex-col gap-2">
+      {/* Badges - Lower z-index */}
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 pointer-events-none">
         {product.isNew && !isOutOfStock && (
           <span className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
             <Star className="w-3 h-3" />
@@ -78,21 +68,39 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
         )}
       </div>
 
-      {/* Favorite Button - Fixed for mobile */}
+      {/* Favorite Button - Highest z-index with pointer-events-auto */}
       <button
+        type="button"
         onClick={handleToggleFavorite}
-        className="absolute top-3 right-3 z-40 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:scale-110 active:scale-95 transition-transform duration-300 touch-manipulation"
+        onTouchEnd={handleToggleFavorite}
+        className="absolute top-3 right-3 z-50 bg-white backdrop-blur-sm p-3 rounded-full shadow-xl hover:scale-110 active:scale-95 transition-all duration-200 pointer-events-auto"
+        style={{ 
+          touchAction: 'manipulation',
+          WebkitTapHighlightColor: 'transparent'
+        }}
         aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
       >
         <Heart
-          className={`w-5 h-5 ${
+          className={`w-5 h-5 transition-colors ${
             isFavorite ? 'fill-red-500 text-red-500' : 'text-amber-600'
           }`}
         />
       </button>
 
+      {/* Out of Stock Overlay - Lower z-index */}
+      {isOutOfStock && (
+        <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm z-20 flex items-center justify-center pointer-events-none rounded-2xl">
+          <div className="bg-white rounded-2xl px-6 py-4 shadow-2xl transform rotate-[-5deg]">
+            <div className="flex items-center gap-2 text-red-600">
+              <AlertCircle className="w-6 h-6" />
+              <span className="text-xl font-bold">Out of Stock</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Product Image */}
-      <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 aspect-square flex items-center justify-center overflow-hidden">
+      <div className="relative bg-gradient-to-br from-amber-50 to-orange-50 aspect-square flex items-center justify-center overflow-hidden rounded-t-2xl">
         {product.image?.url ? (
           <img
             src={product.image.url}
@@ -114,7 +122,7 @@ const ProductCard = ({ product, onAddToCart, isFavorite, onToggleFavorite }) => 
         )}
         
         {/* Overlay on hover */}
-        <div className={`absolute inset-0 bg-gradient-to-t from-amber-900/80 to-transparent transition-opacity duration-300 ${
+        <div className={`absolute inset-0 bg-gradient-to-t from-amber-900/80 to-transparent transition-opacity duration-300 pointer-events-none ${
           isHovered && !isOutOfStock ? 'opacity-100' : 'opacity-0'
         }`}>
           <div className="absolute bottom-4 left-4 right-4 text-white">
