@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useUser, useFavorites, useCart } from '../context/AppContext';
-import { productAPI } from '../services/api';
+import { productAPI, userAPI } from '../services/api';
 import Avatar from '../components/Avatar';
 import AddAddressModal from '../components/AddAddressModal';
 import EditProfileModal from '../components/EditProfileModal';
@@ -20,6 +20,33 @@ const ProfilePage = () => {
   const [loadingFavorites, setLoadingFavorites] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
+  
+  // Stats state
+  const [userStats, setUserStats] = useState({
+    totalOrders: 0,
+    totalSpent: 0,
+    reviewsGiven: 0
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  // Load user stats
+  useEffect(() => {
+    const fetchUserStats = async () => {
+      if (!isAuthenticated) return;
+      
+      try {
+        setLoadingStats(true);
+        const response = await userAPI.getUserStats();
+        setUserStats(response.data.data);
+      } catch (error) {
+        console.error('Failed to load user stats:', error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchUserStats();
+  }, [isAuthenticated]);
 
   // Load favorite products
   useEffect(() => {
@@ -194,10 +221,10 @@ const ProfilePage = () => {
                 {/* Stats Cards */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
-                    { label: 'Total Orders', value: user.stats?.totalOrders || 0, icon: ShoppingBag, color: 'from-blue-500 to-blue-600' },
-                    { label: 'Total Spent', value: `₹${user.stats?.totalSpent || 0}`, icon: IndianRupee, color: 'from-green-500 to-green-600' },
+                    { label: 'Total Orders', value: loadingStats ? '...' : userStats.totalOrders, icon: ShoppingBag, color: 'from-blue-500 to-blue-600' },
+                    { label: 'Total Spent', value: loadingStats ? '...' : `₹${userStats.totalSpent}`, icon: IndianRupee, color: 'from-green-500 to-green-600' },
                     { label: 'Favorites', value: favorites.length, icon: Heart, color: 'from-red-500 to-red-600' },
-                    { label: 'Reviews', value: user.stats?.reviewsGiven || 0, icon: Star, color: 'from-yellow-500 to-yellow-600' }
+                    { label: 'Reviews', value: loadingStats ? '...' : userStats.reviewsGiven, icon: Star, color: 'from-yellow-500 to-yellow-600' }
                   ].map((stat, idx) => {
                     const Icon = stat.icon;
                     return (
