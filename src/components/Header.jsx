@@ -67,7 +67,7 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Desktop Action Buttons */}
+          {/* Action Buttons */}
           <div className="hidden md:flex items-center space-x-3">
             {/* Signed In - Show User Button and Cart */}
             <SignedIn>
@@ -120,65 +120,29 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Mobile Actions (Profile Icon + Menu Button) */}
-          <div className="flex items-center gap-2 md:hidden">
-            {/* Mobile Cart Button - Always visible */}
-            <Link 
-              to="/cart"
-              className="relative p-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-lg hover:scale-105 active:scale-95 transition-all duration-200 touch-manipulation"
-              aria-label="Cart"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-
+          {/* Mobile Menu Button */}
+          <div className="flex">
             <SignedIn>
-              {/* Mobile Profile Button */}
-              <Link 
-                to="/profile"
-                className="p-2 bg-amber-100 text-amber-900 rounded-lg hover:scale-105 active:scale-95 transition-all duration-200 touch-manipulation"
-                aria-label="Profile"
-              >
-                <User className="w-5 h-5" />
-              </Link>
-              
-              {/* Clerk User Button */}
-              <div className="p-1">
-                <UserButton 
-                  appearance={{
-                    elements: {
-                      avatarBox: 'w-9 h-9',
-                      userButtonPopoverCard: 'shadow-2xl',
-                      userButtonPopoverActionButton: 'hover:bg-amber-50'
-                    }
-                  }}
-                  afterSignOutUrl="/"
-                />
+            {/* Clerk User Button with custom appearance */}
+            <div className="md:hidden p-2 mt-1">
+              <UserButton 
+                appearance={{
+                  elements: {
+                    avatarBox: 'w-10 h-10',
+                    userButtonPopoverCard: 'shadow-2xl',
+                    userButtonPopoverActionButton: 'hover:bg-amber-50'
+                  }
+                }}
+                afterSignOutUrl="/"
+              />
               </div>
-            </SignedIn>
-
-            <SignedOut>
-              <Link 
-                to="/sign-in"
-                className="p-2 bg-amber-100 text-amber-900 rounded-lg hover:scale-105 active:scale-95 transition-all duration-200 touch-manipulation"
-                aria-label="Sign In"
-              >
-                <User className="w-5 h-5" />
-              </Link>
-            </SignedOut>
-
-            {/* Mobile Menu Toggle */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 text-amber-900 hover:bg-amber-100 rounded-lg transition-colors touch-manipulation"
-              aria-label="Menu"
-            >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+          </SignedIn>
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden p-2 text-amber-900 hover:bg-amber-100 rounded-lg transition-colors"
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
           </div>
         </div>
 
@@ -193,12 +157,43 @@ const Header = () => {
               <Link
                 key={index}
                 to={item.href}
-                className="px-4 py-3 text-amber-900 font-medium rounded-lg hover:bg-amber-100 active:bg-amber-200 transition-all duration-300 touch-manipulation"
+                className="px-4 py-3 text-amber-900 font-medium rounded-lg hover:bg-amber-100 transition-all duration-300"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {item.name}
               </Link>
             ))}
+            
+            <Link 
+              to="/cart"
+              className="flex items-center justify-center space-x-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white px-5 py-3 rounded-lg"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <ShoppingCart className="w-5 h-5" />
+              <span className="font-medium">Cart ({cartCount})</span>
+            </Link>
+
+            <SignedIn>
+              <Link 
+                to="/profile"
+                className="flex items-center justify-center space-x-2 bg-white text-amber-900 px-5 py-3 rounded-lg border-2 border-amber-300"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <User className="w-5 h-5" />
+                <span className="font-medium">Profile</span>
+              </Link>
+            </SignedIn>
+
+            <SignedOut>
+              <Link 
+                to="/sign-in"
+                className="flex items-center justify-center space-x-2 bg-white text-amber-900 px-5 py-3 rounded-lg border-2 border-amber-300"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <User className="w-5 h-5" />
+                <span className="font-medium">Sign In</span>
+              </Link>
+            </SignedOut>
           </nav>
         </div>
       </div>
