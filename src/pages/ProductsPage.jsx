@@ -196,12 +196,11 @@ const ProductsPage = () => {
       </div>
 
       {/* Floating Menu */}
-      <div className='lg:hidden'>
+      <div className='md:hidden flex right-0'>
         <FloatingMenu
           categories={categories}
           selectedCategory={selectedCategory}
           onCategorySelect={setSelectedCategory}
-          cartCount={totalCartItems}
         />
       </div>
 

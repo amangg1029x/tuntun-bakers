@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronRight, Sparkles } from 'lucide-react';
 import breadImage from '../assets/bread-hero.jpg';
+import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
@@ -43,13 +44,10 @@ const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-              <button className="group bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2">
+              <Link to="/products" className="group bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2">
                 <span>Order Now</span>
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button className="bg-white text-amber-900 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border-2 border-amber-200">
-                View Menu
-              </button>
+              </Link>
             </div>
 
             {/* Stats */}

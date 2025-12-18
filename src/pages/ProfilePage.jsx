@@ -97,8 +97,7 @@ const ProfilePage = () => {
     { id: 'addresses', label: 'Addresses', icon: MapPin },
     { id: 'payments', label: 'Payment Methods', icon: CreditCard },
     { id: 'favorites', label: 'Favorites', icon: Heart },
-    { id: 'preferences', label: 'Preferences', icon: Bell },
-    { id: 'security', label: 'Security', icon: Lock }
+    { id: 'preferences', label: 'Preferences', icon: Bell }
   ];
 
   const handleUpdateProfile = async (formData) => {
@@ -516,71 +515,6 @@ const ProfilePage = () => {
                       />
                     </label>
                   ))}
-                </div>
-              </div>
-            )}
-
-            {/* SECURITY TAB */}
-            {activeTab === 'security' && (
-              <div className="space-y-6 animate-slideInRight">
-                <h3 className="text-2xl font-bold text-amber-950 flex items-center gap-2">
-                  <Lock className="w-6 h-6" />
-                  Security Settings
-                </h3>
-
-                {/* Change Password */}
-                <div className="bg-white rounded-2xl p-6 shadow-lg">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-bold text-amber-950 mb-2">Password</h4>
-                      <p className="text-sm text-amber-700">••••••••••••</p>
-                      <p className="text-xs text-amber-600 mt-1">Last changed 2 months ago</p>
-                    </div>
-                    <button
-                      onClick={() => setShowChangePassword(true)}
-                      className="flex items-center gap-2 text-amber-700 hover:text-amber-900 font-semibold transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                      Change
-                    </button>
-                  </div>
-                </div>
-
-                {/* Account Actions */}
-                <div className="bg-white rounded-2xl p-6 shadow-lg">
-                  <h4 className="font-bold text-amber-950 mb-4">Account Actions</h4>
-                  <div className="space-y-3">
-                    <button className="w-full flex items-center justify-between p-4 bg-red-50 hover:bg-red-100 rounded-xl text-red-700 font-semibold transition-colors group">
-                      <span>Delete Account</span>
-                      <AlertCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Session Info */}
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Lock className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-blue-900 mb-2">Your account is secure</h4>
-                      <ul className="space-y-1 text-sm text-blue-800">
-                        <li className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-blue-600" />
-                          Strong password enabled
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-blue-600" />
-                          Email verified
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Check className="w-4 h-4 text-blue-600" />
-                          Phone verified
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
                 </div>
               </div>
             )}

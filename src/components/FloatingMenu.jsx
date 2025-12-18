@@ -14,9 +14,9 @@ const FloatingMenu = ({ categories, selectedCategory, onCategorySelect, cartCoun
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-50">
+    <div className="fixed bottom-8 -right-25 z-50">
       {/* Category Menu */}
-      <div className={`mb-4 transition-all duration-500 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
+      <div className={`mb-4 transition-all duration-500 ${isOpen ? 'opacity-100 translate-y-0 -translate-x-30' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
         <div className="bg-white rounded-2xl shadow-2xl p-4 min-w-[200px]">
           <div className="text-xs font-bold text-amber-900 mb-3 px-2">Quick Navigate</div>
           {categories.map((category, idx) => (

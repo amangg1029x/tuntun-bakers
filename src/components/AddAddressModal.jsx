@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Plus, Check, X, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
-import serviceablePincodes from "../data/serviceablePincodes.json";
 
 const AddAddressModal = ({ isOpen, onClose, onSave, editAddress }) => {
   const [formData, setFormData] = useState({

@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Search, Filter, X, MapPin, Clock, Phone, CreditCard, Download, RotateCcw, MessageCircle, Star, Check, Truck, ChefHat, CheckCircle2, XCircle, PackageCheck, AlertCircle, Calendar, IndianRupee, ChevronDown, ChevronUp, Sparkles, ShoppingBag } from 'lucide-react';
-import ordersData from "../data/ordersData.json"
 import OrderCard from '../components/OrderCard';
 import OrderDetailsModal from '../components/OrderDetailsModal';
 import { orderAPI } from '../services/api';
 import EmptyOrders from '../components/EmptyOrders';
 
 const OrdersPage = () => {
-  const [orders, setOrders] = useState(ordersData.orders);
-  const [filteredOrders, setFilteredOrders] = useState(ordersData.orders);
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedOrder, setSelectedOrder] = useState(null);
