@@ -14,7 +14,7 @@ const FloatingMenu = ({ categories, selectedCategory, onCategorySelect, cartCoun
   };
 
   return (
-    <div className="fixed bottom-8 -right-25 z-50">
+    <div className="fixed bottom-8 -right-25 z-50 pointer-events-none">
       {/* Category Menu */}
       <div className={`mb-4 transition-all duration-500 ${isOpen ? 'opacity-100 translate-y-0 -translate-x-30' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
         <div className="bg-white rounded-2xl shadow-2xl p-4 min-w-[200px]">
@@ -42,7 +42,7 @@ const FloatingMenu = ({ categories, selectedCategory, onCategorySelect, cartCoun
       {/* Main Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative bg-gradient-to-r from-amber-600 to-amber-700 text-white p-4 rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 group"
+        className="pointer-events-auto relative bg-gradient-to-r from-amber-600 to-amber-700 text-white p-4 rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 group"
       >
         <div className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
           {isOpen ? <X className="w-6 h-6" /> : <ShoppingCart className="w-6 h-6" />}
