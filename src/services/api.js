@@ -1,7 +1,12 @@
 import axios from 'axios';
 
-// Base API URL
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Base API URL with production fallback
+const API_URL = import.meta.env.VITE_API_URL || 
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:5000/api'
+    : 'https://tuntun-bakers-backend.vercel.app/api');
+
+console.log('🌐 API URL:', API_URL);
 
 // Create axios instance with default config
 const api = axios.create({
