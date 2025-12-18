@@ -61,7 +61,7 @@ const OurStory = () => {
           {/* Timeline */}
           <div className="relative">
             {/* Vertical Line */}
-            <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-300 via-orange-300 to-purple-300 transform md:-translate-x-1/2"></div>
+            <div className="absolute left-10.5 md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-300 via-orange-300 to-purple-300 transform md:-translate-x-1/2"></div>
 
             {/* Timeline Items */}
             <div className="space-y-12">

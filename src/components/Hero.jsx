@@ -4,7 +4,7 @@ import breadImage from '../assets/bread-hero.jpg';
 
 const Hero = () => {
   return (
-    <section id="home" className="relative min-h-screen flex items-center bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 overflow-hidden pt-20">
+    <section id="home" className="relative min-h-screen flex items-center bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100 overflow-hidden pt-24 md:pt-20">
       {/* Decorative Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 w-72 h-72 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
@@ -12,10 +12,10 @@ const Hero = () => {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-500"></div>
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10 py-8 md:py-0">
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* Left Content */}
-          <div className="space-y-8 animate-fadeInLeft">
+          <div className="space-y-6 md:space-y-8 animate-fadeInLeft">
             {/* Badge */}
             <div className="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
               <Sparkles className="w-4 h-4 text-amber-600 animate-pulse" />
@@ -26,61 +26,61 @@ const Hero = () => {
 
             {/* Main Heading */}
             <div>
-              <h1 className="text-5xl md:text-7xl font-bold text-amber-950 leading-tight mb-4">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-amber-950 leading-tight mb-3 md:mb-4">
                 Freshly Baked
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
                   Goodness
                 </span>
-                <span className="block text-4xl md:text-5xl mt-2">
+                <span className="block text-3xl sm:text-4xl md:text-5xl mt-2">
                   Every Day!
                 </span>
               </h1>
-              <p className="text-lg md:text-xl text-amber-800 leading-relaxed max-w-lg">
+              <p className="text-base sm:text-lg md:text-xl text-amber-800 leading-relaxed max-w-lg">
                 Experience the warmth of traditional baking with our handcrafted breads, 
                 pastries, and cakes made with love and the finest ingredients.
               </p>
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button className="group bg-gradient-to-r from-amber-600 to-amber-700 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+              <button className="group bg-gradient-to-r from-amber-600 to-amber-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2">
                 <span>Order Now</span>
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="bg-white text-amber-900 px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border-2 border-amber-200">
+              <button className="bg-white text-amber-900 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border-2 border-amber-200">
                 View Menu
               </button>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-6 pt-8">
+            <div className="grid grid-cols-3 gap-4 md:gap-6 pt-6 md:pt-8">
               {[
                 { number: '30+', label: 'Years Experience' },
                 { number: '50+', label: 'Fresh Items Daily' },
                 { number: '10k+', label: 'Happy Customers' }
               ].map((stat, index) => (
                 <div key={index} className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-amber-900">
+                  <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-amber-900">
                     {stat.number}
                   </div>
-                  <div className="text-sm text-amber-700 mt-1">{stat.label}</div>
+                  <div className="text-xs sm:text-sm text-amber-700 mt-1">{stat.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Right Content - Image Section */}
-          <div className="relative animate-fadeInRight">
+          <div className="relative animate-fadeInRight mt-8 md:mt-0">
             <div className="relative z-10">
               {/* Main Image Card */}
-              <div className="bg-white rounded-3xl shadow-2xl p-6 transform hover:scale-105 transition-transform duration-500">
-                <div className="aspect-square rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 overflow-hidden relative">
-                  <div className="w-full h-full flex items-center justify-center p-8">
+              <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-6 transform hover:scale-105 transition-transform duration-500">
+                <div className="aspect-square rounded-xl md:rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 overflow-hidden relative">
+                  <div className="w-full h-full flex items-center justify-center p-4 md:p-8">
                     {/* Beautiful Bread Image with Gradient Overlay */}
                     <div className="relative w-full h-full">
                       <div className="absolute inset-0 bg-gradient-to-br from-amber-400/20 to-orange-500/20 rounded-full"></div>
                       <div className="relative w-full h-full flex items-center justify-center">
-                        <div className="w-72 h-72 rounded-full overflow-hidden shadow-2xl ring-8 ring-white/50 transform hover:scale-105 transition-transform duration-500">
+                        <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 rounded-full overflow-hidden shadow-2xl ring-4 md:ring-8 ring-white/50 transform hover:scale-105 transition-transform duration-500">
                           <img 
                             src={breadImage}
                             alt="Fresh Artisan Bread"
@@ -89,13 +89,13 @@ const Hero = () => {
                         </div>
                       </div>
                       {/* Decorative elements */}
-                      <div className="absolute top-4 right-4 w-20 h-20 bg-amber-300/30 rounded-full blur-xl"></div>
-                      <div className="absolute bottom-8 left-8 w-16 h-16 bg-orange-300/30 rounded-full blur-xl"></div>
+                      <div className="absolute top-4 right-4 w-16 md:w-20 h-16 md:h-20 bg-amber-300/30 rounded-full blur-xl"></div>
+                      <div className="absolute bottom-8 left-8 w-12 md:w-16 h-12 md:h-16 bg-orange-300/30 rounded-full blur-xl"></div>
                     </div>
                   </div>
                   {/* Text below image */}
-                  <div className="absolute bottom-4 left-0 right-0 text-center">
-                    <p className="text-amber-900 font-bold text-xl bg-white/80 backdrop-blur-sm py-2 px-4 rounded-full inline-block shadow-lg">
+                  <div className="absolute bottom-2 md:bottom-4 left-0 right-0 text-center px-2">
+                    <p className="text-amber-900 font-bold text-sm sm:text-base md:text-xl bg-white/80 backdrop-blur-sm py-1.5 md:py-2 px-3 md:px-4 rounded-full inline-block shadow-lg">
                       Fresh Breads & Pastries
                     </p>
                   </div>
@@ -103,27 +103,27 @@ const Hero = () => {
               </div>
 
               {/* Floating Cards */}
-              <div className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-xl p-4 animate-bounce-slow">
-                <div className="flex items-center space-x-3">
-                  <div className="text-3xl">⭐</div>
+              <div className="absolute -top-2 -right-2 md:-top-4 md:-right-4 bg-white rounded-xl md:rounded-2xl shadow-xl p-3 md:p-4 animate-bounce-slow">
+                <div className="flex items-center space-x-2 md:space-x-3">
+                  <div className="text-xl md:text-3xl">⭐</div>
                   <div>
-                    <div className="text-2xl font-bold text-amber-900">4.9</div>
+                    <div className="text-xl md:text-2xl font-bold text-amber-900">4.9</div>
                     <div className="text-xs text-amber-700">Rating</div>
                   </div>
                 </div>
               </div>
 
-              <div className="absolute -bottom-4 -left-4 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl shadow-xl p-4 text-white animate-pulse">
+              <div className="absolute -bottom-2 -left-2 md:-bottom-4 md:-left-4 bg-gradient-to-r from-green-500 to-green-600 rounded-xl md:rounded-2xl shadow-xl p-3 md:p-4 text-white animate-pulse">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-white rounded-full animate-ping"></div>
-                  <span className="font-semibold">Open Now!</span>
+                  <div className="w-2 h-2 md:w-3 md:h-3 bg-white rounded-full animate-ping"></div>
+                  <span className="font-semibold text-sm md:text-base">Open Now!</span>
                 </div>
                 <div className="text-xs mt-1 opacity-90">6 AM - 10 PM</div>
               </div>
             </div>
 
             {/* Background decoration circles */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full">
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-full hidden md:block">
               <div className="absolute top-0 right-0 w-32 h-32 border-4 border-amber-300 rounded-full opacity-50"></div>
               <div className="absolute bottom-0 left-0 w-24 h-24 border-4 border-orange-300 rounded-full opacity-50"></div>
             </div>
