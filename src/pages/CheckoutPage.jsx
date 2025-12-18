@@ -75,7 +75,7 @@ const CheckoutPage = () => {
     }
   }, [cart, loading, navigate]);
 
-  const handleAddAddress = async (addressIdOrData, addressData) => {
+  const handleSaveAddress = async (addressIdOrData, addressData) => {
     try {
       if (typeof addressIdOrData === 'string') {
         // Editing existing address
@@ -84,11 +84,10 @@ const CheckoutPage = () => {
         // Adding new address
         await addAddress(addressIdOrData);
       }
+      alert('✅ Address saved successfully!');
     } catch (error) {
       console.error('Failed to save address:', error);
-      throw error;
-    } finally {
-      setEditingAddress(null);
+      throw error; // Let modal handle the error
     }
   };
 
@@ -509,7 +508,7 @@ const handlePlaceOrder = async () => {
           setShowAddressModal(false);
           setEditingAddress(null);
         }}
-        onSave={handleAddAddress}
+        onSave={handleSaveAddress}
         editAddress={editingAddress}
       />
 
