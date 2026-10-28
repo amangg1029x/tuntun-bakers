@@ -133,7 +133,7 @@ const OrdersPage = () => {
       
       // Refresh orders
       const response = await orderAPI.getAll();
-      setOrders(response.data.data);
+      setOrders((Array.isArray(response.data?.data) ? response.data.data : []).map(normalizeOrder));
       alert('Thank you for your review!');
     } catch (error) {
       console.error('Add review failed:', error);
