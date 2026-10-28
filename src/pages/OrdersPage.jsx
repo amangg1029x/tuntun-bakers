@@ -5,6 +5,40 @@ import OrderDetailsModal from '../components/OrderDetailsModal';
 import { orderAPI } from '../services/api';
 import EmptyOrders from '../components/EmptyOrders';
 
+const normalizeOrder = (order = {}) => {
+  const createdAt = order.createdAt || order.created_at || order.date;
+  const dateValue = createdAt ? new Date(createdAt) : null;
+  const items = Array.isArray(order.items) ? order.items.map((item = {}) => ({
+    ...item,
+    name: item.name || item.product_name || item.productName || item.title || 'Product',
+    price: Number(item.price ?? item.unit_price ?? item.unitPrice ?? 0),
+    quantity: Number(item.quantity ?? 1),
+    emoji: item.emoji || '🍽️',
+  })) : [];
+  const status = order.status || 'Pending';
+  return {
+    ...order,
+    _id: order._id || order.id,
+    orderNumber: String(order.orderNumber || order.order_number || order.id || 'Order'),
+    date: order.date || (dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue.toLocaleDateString('en-IN') : 'Date unavailable'),
+    time: order.time || (dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''),
+    items,
+    totalAmount: Number(order.totalAmount ?? order.total_amount ?? 0),
+    deliveryAddress: order.deliveryAddress || order.delivery_address || {},
+    paymentMethod: order.paymentMethod || order.payment_method || 'Not specified',
+    paymentStatus: order.paymentStatus || order.payment_status || 'Pending',
+    status,
+    timeline: Array.isArray(order.timeline) ? order.timeline : [
+      { status: 'Order placed', time: dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue.toLocaleString('en-IN') : '', completed: true },
+      { status, time: '', completed: !['Pending', 'Cancelled'].includes(status) },
+    ],
+    canReorder: order.canReorder ?? status === 'Delivered',
+    canCancel: order.canCancel ?? ['Pending', 'Confirmed', 'Preparing'].includes(status),
+    canReview: order.canReview ?? status === 'Delivered',
+    rating: Number(order.rating || 0),
+  };
+};
+
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
@@ -20,8 +54,9 @@ const OrdersPage = () => {
       try {
         setLoading(true);
         const response = await orderAPI.getAll();
-        setOrders(response.data.data);
-        setFilteredOrders(response.data.data);
+        const normalized = (Array.isArray(response.data?.data) ? response.data.data : []).map(normalizeOrder);
+        setOrders(normalized);
+        setFilteredOrders(normalized);
       } catch (error) {
         console.error('Failed to load orders:', error);
       } finally {
@@ -44,8 +79,8 @@ const OrdersPage = () => {
     // Search filter
     if (searchQuery) {
       result = result.filter(order =>
-        order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.items.some(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        String(order.orderNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (Array.isArray(order.items) && order.items.some(item => String(item.name || '').toLowerCase().includes(searchQuery.toLowerCase())))
       );
     }
 
@@ -76,7 +111,7 @@ const OrdersPage = () => {
       
       // Refresh orders
       const response = await orderAPI.getAll();
-      setOrders(response.data.data);
+      setOrders((Array.isArray(response.data?.data) ? response.data.data : []).map(normalizeOrder));
       alert('Order cancelled successfully!');
     } catch (error) {
       console.error('Cancel order failed:', error);
@@ -98,7 +133,7 @@ const OrdersPage = () => {
       
       // Refresh orders
       const response = await orderAPI.getAll();
-      setOrders(response.data.data);
+      setOrders((Array.isArray(response.data?.data) ? response.data.data : []).map(normalizeOrder));
       alert('Thank you for your review!');
     } catch (error) {
       console.error('Add review failed:', error);
