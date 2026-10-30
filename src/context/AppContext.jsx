@@ -81,7 +81,7 @@ export const AppProvider = ({ children }) => {
         console.log('🔄 Syncing user with backend...');
         try {
           // Fetch user from backend (will create if doesn't exist)
-          const response = await authAPI.getMe();
+          const response = await userAPI.getProfile();
           const userData = response?.data?.data;
           
           if (userData) {
@@ -111,7 +111,7 @@ export const AppProvider = ({ children }) => {
                 console.log('✅ Token refreshed, retrying sync...');
                 
                 // Retry sync
-                const response = await authAPI.getMe();
+                const response = await userAPI.getProfile();
                 const userData = response?.data?.data;
                 if (userData) {
                   setUser(userData);
