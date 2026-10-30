@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useUser as useClerkUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
-import { authAPI, cartAPI, favoriteAPI, userAPI } from '../services/api';
+import { authAPI, cartAPI, favoriteAPI, userAPI, setClerkTokenProvider } from '../services/api';
 
 const CartContext = createContext();
 const FavoritesContext = createContext();
@@ -27,6 +27,13 @@ export const useUser = () => {
 export const AppProvider = ({ children }) => {
   const { user: clerkUser, isLoaded: clerkLoaded } = useClerkUser();
   const { getToken, isSignedIn } = useClerkAuth();
+
+  // Keep the API client connected to Clerk's live token getter so requests
+  // never depend on a potentially expired token cached in localStorage.
+  useEffect(() => {
+    setClerkTokenProvider(() => getToken());
+    return () => setClerkTokenProvider(null);
+  }, [getToken]);
   
   const [cart, setCart] = useState([]);
   const [favorites, setFavorites] = useState([]);

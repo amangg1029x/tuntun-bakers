@@ -8,6 +8,13 @@ const API_URL = import.meta.env.VITE_API_URL ||
 
 console.log('🌐 API URL:', API_URL);
 
+// The AppProvider supplies Clerk's live token getter. Fetch a fresh token
+// for each API request instead of reusing an expiring localStorage snapshot.
+let clerkTokenProvider = null;
+export const setClerkTokenProvider = (provider) => {
+  clerkTokenProvider = typeof provider === 'function' ? provider : null;
+};
+
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_URL,
@@ -20,11 +27,14 @@ const api = axios.create({
 // Add Clerk token to requests automatically
 api.interceptors.request.use(
   async (config) => {
-    // Get Clerk token from localStorage
-    const token = localStorage.getItem('clerk-token');
+    // Ask Clerk for a current session token on every request.
+    const token = clerkTokenProvider ? await clerkTokenProvider() : localStorage.getItem('clerk-token');
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      localStorage.setItem('clerk-token', token);
+    } else {
+      delete config.headers.Authorization;
     }
     
     return config;
