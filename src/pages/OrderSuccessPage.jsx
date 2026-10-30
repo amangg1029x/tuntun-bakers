@@ -8,6 +8,12 @@ const OrderSuccessPage = () => {
   const [showConfetti, setShowConfetti] = useState(true);
   
   const order = location.state?.order;
+  // PostgreSQL numeric columns may arrive from the API as strings.
+  // Normalize values before formatting currency to avoid calling toFixed on strings.
+  const formatMoney = (value) => {
+    const amount = Number(value);
+    return Number.isFinite(amount) ? amount.toFixed(2) : '0.00';
+  };
 
   // Redirect if no order data
   useEffect(() => {
@@ -131,7 +137,7 @@ const OrderSuccessPage = () => {
                           <p className="text-xs text-amber-700">Qty: {item.quantity}</p>
                         </div>
                       </div>
-                      <p className="font-bold text-amber-900">₹{(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="font-bold text-amber-900">₹{formatMoney(Number(item.price) * Number(item.quantity))}</p>
                     </div>
                   ))
                 ) : (
@@ -141,15 +147,15 @@ const OrderSuccessPage = () => {
               <div className="border-t-2 border-amber-200 pt-4 space-y-2">
                 <div className="flex justify-between text-amber-900">
                   <span>Subtotal</span>
-                  <span>₹{order.subtotal?.toFixed(2) || '0.00'}</span>
+                  <span>₹{formatMoney(order.subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-amber-900">
                   <span>Delivery Charge</span>
-                  <span>{order.deliveryCharge === 0 ? 'FREE' : `₹${order.deliveryCharge?.toFixed(2)}`}</span>
+                  <span>{order.deliveryCharge === 0 ? 'FREE' : `₹${formatMoney(order.deliveryCharge)}`}</span>
                 </div>
                 <div className="flex justify-between text-xl font-bold text-amber-950 pt-2 border-t border-amber-200">
                   <span>Total Paid</span>
-                  <span>₹{order.totalAmount?.toFixed(2) || '0.00'}</span>
+                  <span>₹{formatMoney(order.totalAmount)}</span>
                 </div>
               </div>
             </div>
