@@ -76,6 +76,11 @@ const AdminCustomers = () => {
   };
 
   // Calculate total revenue from all customers
+  const formatCurrency = (value) => {
+    const amount = Number(value);
+    return Number.isFinite(amount) ? amount.toFixed(2) : '0.00';
+  };
+
   const calculateTotalRevenue = () => {
     return safeCustomers.reduce((sum, customer) => {
       const totalSpent = customer.stats?.totalSpent || customer.totalSpent || 0;
@@ -200,7 +205,7 @@ const AdminCustomers = () => {
                           <p className="text-xs text-gray-600">{new Date(order.createdAt).toLocaleString()}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-bold text-gray-900">₹{(order.totalAmount || 0).toFixed(2)}</p>
+                          <p className="text-lg font-bold text-gray-900">₹{formatCurrency(order.totalAmount)}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                               order.status === 'Delivered' ? 'bg-green-100 text-green-700' :

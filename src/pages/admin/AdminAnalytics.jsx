@@ -48,8 +48,9 @@ const AdminAnalytics = () => {
     }
   };
 
-  const formatCurrency = (amount) => {
-    return `₹${amount?.toFixed(2) || '0.00'}`;
+  const formatCurrency = (value) => {
+    const amount = Number(value);
+    return `₹${Number.isFinite(amount) ? amount.toFixed(2) : '0.00'}`;
   };
 
   const SimpleBarChart = ({ data }) => {
@@ -65,7 +66,7 @@ const AdminAnalytics = () => {
             <div className="flex-1 bg-gray-100 rounded-full h-8 relative overflow-hidden">
               <div
                 className="bg-gradient-to-r from-amber-500 to-amber-600 h-full rounded-full transition-all duration-500 flex items-center justify-end px-3"
-                style={{ width: `${(item.revenue / maxRevenue) * 100}%` }}
+                style={{ width: `${((Number(item.revenue) || 0) / maxRevenue) * 100}%` }}
               >
                 <span className="text-white text-xs font-semibold">{formatCurrency(item.revenue)}</span>
               </div>
@@ -134,7 +135,7 @@ const AdminAnalytics = () => {
             </div>
           </div>
           <p className="text-3xl font-bold text-gray-900">
-            {formatCurrency(analytics?.data?.reduce((sum, item) => sum + (item.revenue || 0), 0))}
+            {formatCurrency(analytics?.data?.reduce((sum, item) => sum + (Number(item.revenue) || 0), 0))}
           </p>
           <p className="text-xs text-gray-500 mt-1">For selected period</p>
         </div>
@@ -161,7 +162,7 @@ const AdminAnalytics = () => {
           </div>
           <p className="text-3xl font-bold text-gray-900">
             {formatCurrency(
-              analytics?.data?.reduce((sum, item) => sum + (item.avgOrderValue || 0), 0) /
+              analytics?.data?.reduce((sum, item) => sum + (Number(item.avgOrderValue) || 0), 0) /
               (analytics?.data?.length || 1)
             )}
           </p>
@@ -176,7 +177,7 @@ const AdminAnalytics = () => {
             </div>
           </div>
           <p className="text-xl font-bold text-gray-900">
-            {analytics?.data?.reduce((max, item) => item.revenue > (max?.revenue || 0) ? item : max, {})?._id || 'N/A'}
+            {analytics?.data?.reduce((max, item) => Number(item.revenue) > (Number(max?.revenue) || 0) ? item : max, {})?._id || 'N/A'}
           </p>
           <p className="text-xs text-gray-500 mt-1">Highest revenue</p>
         </div>
