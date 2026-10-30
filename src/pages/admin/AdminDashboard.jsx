@@ -17,6 +17,10 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
+  const formatCurrency = (value) => {
+    const amount = Number(value);
+    return Number.isFinite(amount) ? amount.toFixed(2) : '0.00';
+  };
   const { getToken } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -89,7 +93,7 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Revenue"
-          value={`₹${stats?.overview.totalRevenue?.toFixed(2) || '0.00'}`}
+          value={`₹${formatCurrency(stats?.overview?.totalRevenue)}`}
           icon={DollarSign}
           color="bg-gradient-to-br from-green-500 to-green-600"
         />
@@ -119,7 +123,7 @@ const AdminDashboard = () => {
           <h3 className="text-sm font-semibold text-gray-600 mb-4">Today</h3>
           <div className="space-y-3">
             <div>
-              <p className="text-2xl font-bold text-gray-900">₹{stats?.today.revenue?.toFixed(2) || '0.00'}</p>
+              <p className="text-2xl font-bold text-gray-900">₹{formatCurrency(stats?.today?.revenue)}</p>
               <p className="text-sm text-gray-600">Revenue</p>
             </div>
             <div>
@@ -133,7 +137,7 @@ const AdminDashboard = () => {
           <h3 className="text-sm font-semibold text-gray-600 mb-4">This Week</h3>
           <div className="space-y-3">
             <div>
-              <p className="text-2xl font-bold text-gray-900">₹{stats?.week.revenue?.toFixed(2) || '0.00'}</p>
+              <p className="text-2xl font-bold text-gray-900">₹{formatCurrency(stats?.week?.revenue)}</p>
               <p className="text-sm text-gray-600">Revenue</p>
             </div>
             <div>
@@ -147,7 +151,7 @@ const AdminDashboard = () => {
           <h3 className="text-sm font-semibold text-gray-600 mb-4">This Month</h3>
           <div className="space-y-3">
             <div>
-              <p className="text-2xl font-bold text-gray-900">₹{stats?.month.revenue?.toFixed(2) || '0.00'}</p>
+              <p className="text-2xl font-bold text-gray-900">₹{formatCurrency(stats?.month?.revenue)}</p>
               <p className="text-sm text-gray-600">Revenue</p>
             </div>
             <div>
@@ -233,7 +237,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-green-600">₹{product.revenue?.toFixed(2)}</p>
+                  <p className="text-lg font-bold text-green-600">₹{formatCurrency(product.revenue)}</p>
                   <p className="text-xs text-gray-600">Revenue</p>
                 </div>
               </div>
@@ -274,7 +278,7 @@ const AdminDashboard = () => {
                   <tr key={order._id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="py-3 px-4 font-mono text-sm">{order.orderNumber}</td>
                     <td className="py-3 px-4 text-sm">{order.user?.name || 'N/A'}</td>
-                    <td className="py-3 px-4 font-semibold text-sm">₹{order.totalAmount?.toFixed(2)}</td>
+                    <td className="py-3 px-4 font-semibold text-sm">₹{formatCurrency(order.totalAmount)}</td>
                     <td className="py-3 px-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
