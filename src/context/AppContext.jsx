@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useUser as useClerkUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
-import { authAPI, cartAPI, favoriteAPI, userAPI, setClerkTokenProvider } from '../services/api';
+import { cartAPI, favoriteAPI, userAPI, setClerkTokenProvider } from '../services/api';
 
 const CartContext = createContext();
 const FavoritesContext = createContext();
