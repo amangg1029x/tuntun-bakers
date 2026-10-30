@@ -385,7 +385,7 @@ const AdminOrders = () => {
                       </div>
                     </td>
                     <td className="py-4 px-6 text-sm">{order.items?.length || 0} items</td>
-                    <td className="py-4 px-6 font-bold text-gray-900">₹{order.totalAmount?.toFixed(2)}</td>
+                    <td className="py-4 px-6 font-bold text-gray-900">₹{formatCurrency(order.totalAmount)}</td>
                     <td className="py-4 px-6">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
