@@ -17,6 +17,10 @@ import {
 import { toast } from 'react-hot-toast';
 
 const AdminOrders = () => {
+  const formatCurrency = (value) => {
+    const amount = Number(value);
+    return Number.isFinite(amount) ? amount.toFixed(2) : '0.00';
+  };
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
@@ -198,22 +202,22 @@ const AdminOrders = () => {
                         <p className="text-sm text-gray-600">Qty: {item.quantity} × ₹{item.price}</p>
                       </div>
                     </div>
-                    <p className="font-bold text-gray-900">₹{(item.quantity * item.price).toFixed(2)}</p>
+                    <p className="font-bold text-gray-900">₹{formatCurrency(Number(item.quantity) * Number(item.price))}</p>
                   </div>
                 ))}
               </div>
               <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
                 <div className="flex justify-between text-gray-700">
                   <span>Subtotal</span>
-                  <span>₹{order.subtotal?.toFixed(2)}</span>
+                  <span>₹{formatCurrency(order.subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-gray-700">
                   <span>Delivery Charge</span>
-                  <span>{order.deliveryCharge === 0 ? 'FREE' : `₹${order.deliveryCharge?.toFixed(2)}`}</span>
+                  <span>{order.deliveryCharge === 0 ? 'FREE' : `₹${formatCurrency(order.deliveryCharge)}`}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold text-gray-900 pt-2 border-t border-gray-200">
                   <span>Total</span>
-                  <span>₹{order.totalAmount?.toFixed(2)}</span>
+                  <span>₹{formatCurrency(order.totalAmount)}</span>
                 </div>
               </div>
             </div>
