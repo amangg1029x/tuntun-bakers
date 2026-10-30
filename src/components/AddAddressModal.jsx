@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Plus, Check, X, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { X } from 'lucide-react';
 
 const AddAddressModal = ({ isOpen, onClose, onSave, editAddress }) => {
   const [formData, setFormData] = useState({
@@ -11,8 +11,6 @@ const AddAddressModal = ({ isOpen, onClose, onSave, editAddress }) => {
     pincode: '',
     isDefault: false
   });
-  const [pincodeError, setPincodeError] = useState('');
-  const [isChecking, setIsChecking] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -37,38 +35,23 @@ const AddAddressModal = ({ isOpen, onClose, onSave, editAddress }) => {
         pincode: '',
         isDefault: false
       });
-      setPincodeError('');
     }
   }, [editAddress, isOpen]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    const nextValue = name === 'pincode' ? value.replace(/\D/g, '').slice(0, 6) : value;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : nextValue
     }));
-
-    // Check pincode validity
-    if (name === 'pincode' && value.length === 6) {
-      setIsChecking(true);
-      setTimeout(() => {
-        if (serviceablePincodes.includes(value)) {
-          setPincodeError('');
-        } else {
-          setPincodeError('Sorry, we don\'t deliver to this pincode yet.');
-        }
-        setIsChecking(false);
-      }, 500);
-    } else if (name === 'pincode' && value.length < 6) {
-      setPincodeError('');
-    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (pincodeError) {
-      alert('Please fix errors before saving');
+    if (!/^[0-9]{6}$/.test(formData.pincode)) {
+      alert('Please enter a valid 6-digit pincode.');
       return;
     }
 
@@ -102,7 +85,6 @@ const AddAddressModal = ({ isOpen, onClose, onSave, editAddress }) => {
         pincode: '',
         isDefault: false
       });
-      setPincodeError('');
       onClose();
     } catch (error) {
       console.error('Failed to save address:', error);
@@ -233,22 +215,11 @@ const AddAddressModal = ({ isOpen, onClose, onSave, editAddress }) => {
                   pattern="[0-9]{6}"
                   maxLength="6"
                   className={`w-full px-4 py-3 rounded-xl border-2 focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                    pincodeError ? 'border-red-500' : 'border-amber-200 focus:border-amber-500'
+                    'border-amber-200 focus:border-amber-500'
                   }`}
                   placeholder="201001"
                 />
-                {isChecking && (
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                    <div className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                )}
               </div>
-              {pincodeError && (
-                <p className="text-red-600 text-sm mt-1 flex items-center gap-1">
-                  <AlertCircle className="w-4 h-4" />
-                  {pincodeError}
-                </p>
-              )}
             </div>
           </div>
 
@@ -277,7 +248,7 @@ const AddAddressModal = ({ isOpen, onClose, onSave, editAddress }) => {
             </button>
             <button
               type="submit"
-              disabled={!!pincodeError || isSaving}
+              disabled={isSaving}
               className="flex-1 bg-gradient-to-r from-amber-600 to-amber-700 text-white py-3 rounded-xl font-semibold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
               {isSaving ? (
